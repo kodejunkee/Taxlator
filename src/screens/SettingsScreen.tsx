@@ -45,7 +45,7 @@ export const SettingsScreen = () => {
   );
 
   return (
-    <ScrollView 
+    <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
@@ -59,8 +59,8 @@ export const SettingsScreen = () => {
       >
         <View style={styles.ratesHeader}>
           <Text style={[TYPOGRAPHY.h4, { color: colors.text }]}>Exchange Rates</Text>
-          <TouchableOpacity 
-            style={[styles.refreshBtn, { backgroundColor: `${colors.primary}15` }]} 
+          <TouchableOpacity
+            style={[styles.refreshBtn, { backgroundColor: `${colors.primary}15` }]}
             onPress={handleRefreshRates}
             disabled={isLoading}
           >
@@ -74,12 +74,12 @@ export const SettingsScreen = () => {
         <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, marginTop: 4, marginBottom: SIZES.large }]}>
           Base: 1 USD • Updated Weekly
         </Text>
-        
+
         {['NGN', 'GBP', 'EUR'].map((curr, idx) => (
-          <View 
-            key={curr} 
+          <View
+            key={curr}
             style={[
-              styles.rateItem, 
+              styles.rateItem,
               { borderBottomColor: colors.border, borderBottomWidth: idx === 2 ? 0 : 1 }
             ]}
           >
@@ -97,8 +97,8 @@ export const SettingsScreen = () => {
         ))}
       </MotiView>
 
-      <SettingSection 
-        title="Appearance" 
+      <SettingSection
+        title="Appearance"
         description="Choose your preferred theme for the application."
         delay={300}
       >
@@ -114,13 +114,13 @@ export const SettingsScreen = () => {
               onPress={() => setMode(t.value)}
               activeOpacity={0.7}
             >
-              <Ionicons 
-                name={t.icon} 
-                size={20} 
-                color={mode === t.value ? colors.primary : colors.textSecondary} 
+              <Ionicons
+                name={t.icon}
+                size={20}
+                color={mode === t.value ? colors.primary : colors.textSecondary}
                 style={{ marginBottom: 6 }}
               />
-              <Text 
+              <Text
                 style={[
                   TYPOGRAPHY.captionMedium,
                   { color: mode === t.value ? colors.primary : colors.textSecondary }
@@ -134,7 +134,7 @@ export const SettingsScreen = () => {
       </SettingSection>
 
       <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, textAlign: 'center', marginTop: SIZES.large }]}>
-        Taxlator v1.0.1
+        Taxlator v1.0.0
       </Text>
       <View style={{ height: 100 }} />
       <CustomAlert

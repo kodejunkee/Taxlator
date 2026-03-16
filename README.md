@@ -71,6 +71,6 @@ Taxlator isn't just a tool; it's a creative statement. The UI utilizes:
 ---
 
 ## 📜 Version
-Current Version: **v1.0.1 (Artistic Release)**
+Current Version: **v1.0.0 (Artistic Release)**
 
 Developed with ❤️ for the Nigerian Financial Ecosystem.

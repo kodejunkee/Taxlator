@@ -43,8 +43,7 @@ export const SalaryCalculatorScreen = () => {
 
   const ArtisticResult = ({ label, amountNGN, color = colors.text, delay = 0, isLarge = false }: any) => {
     // Determine which currency to show as secondary
-    // If selected is NGN, we might still show the global preferred one
-    // But user said: "If selected = naira, no secondary display. If selects dollar = secondary shows in dollar"
+    // If selected = naira, no secondary display. If selects dollar = secondary shows in dollar"
     // This implies for THIS screen results, we follow the selected currency.
     const secondaryCurrency = selectedCurrency !== 'NGN' ? selectedCurrency : null;
     const amountSec = secondaryCurrency ? convertFromNGN(amountNGN, secondaryCurrency, settings.exchangeRates) : null;
