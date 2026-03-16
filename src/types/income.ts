@@ -1,4 +1,4 @@
-export type Currency = 'NGN' | 'USD' | 'GBP' | 'EUR';
+export type Currency = string; // Supports all ISO 4217 codes (e.g., NGN, USD, GBP, JPY, etc.)
 
 export interface IncomeEntry {
   id: string;

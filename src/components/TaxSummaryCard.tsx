@@ -6,6 +6,8 @@ import { SIZES, SHADOWS, TYPOGRAPHY } from '../theme';
 import { useTheme } from '../context/ThemeContext';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import { Currency } from '../types/income';
+import { useAppContext } from '../context/AppContext';
+import { convertFromNGN } from '../utils/currencyConverter';
 
 interface Props {
   title: string;
@@ -29,6 +31,14 @@ export const TaxSummaryCard: React.FC<Props> = ({
   showChart = false,
 }) => {
   const { colors, isDark } = useTheme();
+  const { settings } = useAppContext();
+
+  const activePreferred = preferredCurrency || settings.preferredCurrency;
+  const showSecondary = activePreferred && activePreferred !== 'NGN';
+  
+  const displayPreferredAmount = amountPreferred !== undefined 
+    ? amountPreferred 
+    : (showSecondary ? convertFromNGN(amountNGN, activePreferred, settings.exchangeRates) : undefined);
 
   let isLightText = false;
   let gradientColors: readonly [string, string, ...string[]] = [colors.card, colors.card];
@@ -74,8 +84,8 @@ export const TaxSummaryCard: React.FC<Props> = ({
         </Text>
         <CurrencyDisplay 
           amountNGN={amountNGN} 
-          amountPreferred={amountPreferred}
-          preferredCurrency={preferredCurrency}
+          amountPreferred={displayPreferredAmount}
+          preferredCurrency={showSecondary ? activePreferred : undefined}
           isNegative={false}
           textStyle={isLightText ? { color: '#FFFFFF', fontSize: size === 'large' ? 28 : 22 } : { fontSize: size === 'large' ? 28 : 22 }}
           style={{ marginTop: 2 }}

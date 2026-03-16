@@ -11,19 +11,29 @@ import { Currency } from '../types/income';
 import { convertToNGN } from '../utils/currencyConverter';
 import { getCurrencySymbol, formatInputAmount, parseFormattedAmount } from '../utils/formatters';
 
+import { CurrencySelector } from '../components/CurrencySelector';
+import { CurrencyModal } from '../components/CurrencyModal';
 import { CustomAlert } from '../components/common/CustomAlert';
 
-const CURRENCIES: Currency[] = ['NGN', 'USD', 'GBP', 'EUR'];
+const CURRENCIES = ['NGN', 'USD', 'GBP', 'EUR']; // Keep for something? Actually, I'll remove it.
 
 export const AddIncomeScreen = () => {
   const navigation = useNavigation();
-  const { addIncome, settings } = useAppContext();
+  const { addIncome, settings, updateSettings } = useAppContext();
   const { colors } = useTheme();
-  
+
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [currency, setCurrency] = useState<Currency>('NGN');
+  const [currency, setCurrency] = useState<Currency>(settings.preferredCurrency || 'NGN');
   const [isErrorVisible, setIsErrorVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const handleSelectCurrency = (code: string) => {
+    setCurrency(code);
+    if (code !== 'NGN') {
+      updateSettings({ preferredCurrency: code });
+    }
+  };
 
   const handleSave = () => {
     const numAmount = parseFormattedAmount(amount);
@@ -33,7 +43,7 @@ export const AddIncomeScreen = () => {
     }
 
     const amountNGN = convertToNGN(numAmount, currency, settings.exchangeRates);
-    
+
     addIncome({
       id: Date.now().toString(),
       amount: numAmount,
@@ -47,8 +57,8 @@ export const AddIncomeScreen = () => {
   };
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: colors.background }]} 
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
@@ -60,9 +70,11 @@ export const AddIncomeScreen = () => {
       >
         <Text style={[TYPOGRAPHY.label, { color: colors.textSecondary, marginBottom: SIZES.small }]}>Amount</Text>
         <View style={[styles.inputContainer, { borderBottomColor: colors.border }]}>
-          <Text style={[styles.currencySymbol, { color: colors.text }]}>
-            {getCurrencySymbol(currency)}
-          </Text>
+          <CurrencySelector
+            currencyCode={currency}
+            onPress={() => setIsModalVisible(true)}
+            style={styles.selector}
+          />
           <TextInput
             style={[styles.input, { color: colors.text }]}
             keyboardType="numeric"
@@ -72,32 +84,6 @@ export const AddIncomeScreen = () => {
             onChangeText={(text) => setAmount(formatInputAmount(text))}
             autoFocus
           />
-        </View>
-
-        <Text style={[TYPOGRAPHY.label, { color: colors.textSecondary, marginBottom: SIZES.medium, marginTop: SIZES.xlarge }]}>Currency</Text>
-        <View style={styles.currencyRow}>
-          {CURRENCIES.map((c, index) => (
-            <TouchableOpacity
-              key={c}
-              style={[
-                styles.currencyBtn,
-                { borderColor: colors.border },
-                currency === c && { backgroundColor: colors.income, borderColor: colors.income }
-              ]}
-              onPress={() => setCurrency(c)}
-              activeOpacity={0.7}
-            >
-              <Text 
-                style={[
-                  TYPOGRAPHY.bodyMedium,
-                  { color: colors.text, fontSize: 13 },
-                  currency === c && { color: '#ffffff' }
-                ]}
-              >
-                {c}
-              </Text>
-            </TouchableOpacity>
-          ))}
         </View>
 
         <Text style={[TYPOGRAPHY.label, { color: colors.textSecondary, marginBottom: SIZES.small, marginTop: SIZES.xlarge }]}>Description</Text>
@@ -137,6 +123,13 @@ export const AddIncomeScreen = () => {
         onConfirm={() => setIsErrorVisible(false)}
         onCancel={() => setIsErrorVisible(false)}
       />
+
+      <CurrencyModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        selectedCurrency={currency}
+        onSelect={handleSelectCurrency}
+      />
     </ScrollView>
   );
 };
@@ -158,15 +151,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderBottomWidth: 1,
-    paddingVertical: SIZES.tiny,
+    paddingBottom: 4,
   },
   currencySymbol: {
     fontSize: 24,
     fontFamily: FONTS.semiBold,
     marginRight: 4,
   },
+  selector: {
+    marginRight: 4,
+    marginTop: 12,
+  },
   input: {
-    fontSize: 28,
+    fontSize: 24,
     fontFamily: FONTS.semiBold,
     flex: 1,
   },
@@ -175,19 +172,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     flex: 1,
     paddingVertical: SIZES.small,
-  },
-  currencyRow: {
-    flexDirection: 'row',
-    marginHorizontal: -4,
-  },
-  currencyBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderRadius: 12,
-    marginHorizontal: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   saveBtnContainer: {
     marginTop: SIZES.xxlarge,

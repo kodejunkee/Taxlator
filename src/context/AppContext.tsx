@@ -14,6 +14,7 @@ interface AppState {
   addIncome: (income: IncomeEntry) => Promise<void>;
   clearIncomes: () => Promise<void>;
   addSaving: (saving: TaxSavings) => Promise<void>;
+  logCurrencyUsage: (code: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -82,10 +83,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setSavings([...savings, saving]);
   };
 
+  const logCurrencyUsage = async (code: string) => {
+    const usage = { ...(settings.currencyUsage || {}) };
+    usage[code] = (usage[code] || 0) + 1;
+    await updateSettings({ currencyUsage: usage });
+  };
+
   return (
     <AppContext.Provider value={{
       settings, incomes, savings, isLoading,
-      updateSettings, refreshRates, addIncome, clearIncomes, addSaving
+      updateSettings, refreshRates, addIncome, clearIncomes, addSaving, logCurrencyUsage
     }}>
       {children}
     </AppContext.Provider>

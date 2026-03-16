@@ -7,19 +7,27 @@ import { useTheme } from '../context/ThemeContext';
 import { Currency } from '../types/income';
 import { convertToNGN, convertFromNGN } from '../utils/currencyConverter';
 import { calculateNigeriaTax } from '../utils/taxCalculator';
-import { PremiumHeader } from '../components/PremiumHeader';
+import { CurrencySelector } from '../components/CurrencySelector';
+import { CurrencyModal } from '../components/CurrencyModal';
 import { getCurrencySymbol, formatInputAmount, parseFormattedAmount } from '../utils/formatters';
 
 const CURRENCIES: Currency[] = ['NGN', 'USD', 'GBP', 'EUR'];
 
 export const SalaryCalculatorScreen = () => {
-  const { settings } = useAppContext();
+  const { settings, updateSettings } = useAppContext();
   const { colors, isDark } = useTheme();
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>('NGN');
   const [salary, setSalary] = useState('');
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
+  const handleSelectCurrency = (code: string) => {
+    setSelectedCurrency(code);
+    if (code !== 'NGN') {
+      updateSettings({ preferredCurrency: code });
+    }
+  };
   const numericSalary = parseFormattedAmount(salary);
-  
+
   const monthlySalaryNGN = convertToNGN(numericSalary, selectedCurrency, settings.exchangeRates);
   const annualGrossNGN = monthlySalaryNGN * 12;
   const taxResults = calculateNigeriaTax(annualGrossNGN);
@@ -34,14 +42,20 @@ export const SalaryCalculatorScreen = () => {
   };
 
   const ArtisticResult = ({ label, amountNGN, color = colors.text, delay = 0, isLarge = false }: any) => {
-    const amountPref = convertFromNGN(amountNGN, settings.preferredCurrency, settings.exchangeRates);
+    // Determine which currency to show as secondary
+    // If selected is NGN, we might still show the global preferred one
+    // But user said: "If selected = naira, no secondary display. If selects dollar = secondary shows in dollar"
+    // This implies for THIS screen results, we follow the selected currency.
+    const secondaryCurrency = selectedCurrency !== 'NGN' ? selectedCurrency : null;
+    const amountSec = secondaryCurrency ? convertFromNGN(amountNGN, secondaryCurrency, settings.exchangeRates) : null;
+
     return (
-      <MotiView 
+      <MotiView
         from={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: 'spring', delay }}
         style={[
-          styles.resultTile, 
+          styles.resultTile,
           { backgroundColor: colors.card, borderColor: colors.border },
           isLarge && { minHeight: 120, flex: 0, width: '100%' }
         ]}
@@ -50,9 +64,9 @@ export const SalaryCalculatorScreen = () => {
         <Text style={[isLarge ? TYPOGRAPHY.h1 : TYPOGRAPHY.h3, { color, marginTop: SIZES.tiny }]}>
           {formatMoney(amountNGN, 'NGN')}
         </Text>
-        {settings.preferredCurrency !== 'NGN' && (
+        {secondaryCurrency && (
           <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, marginTop: 4 }]}>
-            {formatMoney(amountPref, settings.preferredCurrency)}
+            {formatMoney(amountSec!, secondaryCurrency)}
           </Text>
         )}
       </MotiView>
@@ -61,8 +75,8 @@ export const SalaryCalculatorScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      
-      <ScrollView 
+
+      <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -73,10 +87,12 @@ export const SalaryCalculatorScreen = () => {
           style={styles.inputSection}
         >
           <Text style={[TYPOGRAPHY.label, { color: colors.accent, marginBottom: SIZES.tiny }]}>Monthly Gross Salary</Text>
-          <View style={styles.inputWrapper}>
-            <Text style={[styles.currencySymbol, { color: colors.textSecondary }]}>
-              {getCurrencySymbol(selectedCurrency)}
-            </Text>
+          <View style={[styles.inputWrapper, { borderBottomColor: colors.border }]}>
+            <CurrencySelector
+              currencyCode={selectedCurrency}
+              onPress={() => setIsModalVisible(true)}
+              style={styles.selector}
+            />
             <TextInput
               style={[styles.input, { color: colors.text }]}
               keyboardType="numeric"
@@ -85,22 +101,6 @@ export const SalaryCalculatorScreen = () => {
               value={salary}
               onChangeText={(text) => setSalary(formatInputAmount(text))}
             />
-          </View>
-
-          <View style={styles.currencyRow}>
-            {CURRENCIES.map((c) => (
-              <TouchableOpacity
-                key={c}
-                style={[
-                  styles.currencyBtn,
-                  { backgroundColor: selectedCurrency === c ? colors.accent : (isDark ? '#0F172A' : '#F1F5F9') }
-                ]}
-                onPress={() => setSelectedCurrency(c)}
-                activeOpacity={0.8}
-              >
-                <Text style={[TYPOGRAPHY.label, { color: selectedCurrency === c ? '#FFF' : colors.textSecondary }]}>{c}</Text>
-              </TouchableOpacity>
-            ))}
           </View>
         </MotiView>
 
@@ -111,7 +111,7 @@ export const SalaryCalculatorScreen = () => {
 
         <View style={styles.bentoGrid}>
           <ArtisticResult label="Total Gross 2026" amountNGN={taxResults.grossIncome} delay={200} isLarge />
-          
+
           <View style={styles.bentoRow}>
             <ArtisticResult label="Est. Tax" amountNGN={taxResults.tax} color={colors.tax} delay={300} />
             <View style={{ width: SIZES.small }} />
@@ -133,6 +133,13 @@ export const SalaryCalculatorScreen = () => {
 
         <View style={{ height: 120 }} />
       </ScrollView>
+
+      <CurrencyModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        selectedCurrency={selectedCurrency}
+        onSelect={handleSelectCurrency}
+      />
     </View>
   );
 };
@@ -151,38 +158,23 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: '#7C3AED33',
-    paddingVertical: SIZES.small,
-    marginBottom: SIZES.medium,
+    borderBottomWidth: 1,
+    paddingBottom: 4,
   },
-  currencySymbol: {
-    fontSize: 28,
-    fontFamily: FONTS.semiBold,
-    marginRight: SIZES.small,
+  selector: {
+    marginRight: 4,
+    marginTop: 12,
   },
   input: {
-    fontSize: 42,
+    fontSize: 30,
     fontFamily: FONTS.bold,
     flex: 1,
-  },
-  currencyRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  currencyBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 16,
-    marginHorizontal: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: SIZES.medium,
-    marginTop: SIZES.large,
+    marginTop: SIZES.medium,
   },
   dot: {
     width: 6,

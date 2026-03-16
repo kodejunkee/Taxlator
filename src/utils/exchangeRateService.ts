@@ -5,11 +5,17 @@ const RATES_KEY = '@exchange_rates';
 const LAST_FETCH_KEY = '@last_fetch_date';
 const API_URL = 'https://api.exchangerate-api.com/v4/latest/USD';
 
-const DEFAULT_RATES: ExchangeRates = {
+export const DEFAULT_RATES: ExchangeRates = {
   USD: 1,
-  NGN: 1500, // Fallback rate
+  NGN: 1540, // More recent fallback
   GBP: 0.79,
   EUR: 0.92,
+  JPY: 150,
+  CAD: 1.35,
+  AUD: 1.52,
+  CNY: 7.23,
+  INR: 83.3,
+  AED: 3.67,
 };
 
 export async function fetchExchangeRates(): Promise<ExchangeRates> {
@@ -21,7 +27,11 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
     if (lastFetchStr === today) {
       const storedRatesStr = await AsyncStorage.getItem(RATES_KEY);
       if (storedRatesStr) {
-        return JSON.parse(storedRatesStr);
+        const parsed = JSON.parse(storedRatesStr);
+        // Force refresh if we have a very small number of rates (stale cache from old version)
+        if (Object.keys(parsed).length > 10) {
+          return parsed;
+        }
       }
     }
 
@@ -32,11 +42,10 @@ export async function fetchExchangeRates(): Promise<ExchangeRates> {
     }
     const data = await response.json();
 
+    // Store ALL rates from the API
     const newRates: ExchangeRates = {
-      USD: 1,
-      NGN: data.rates.NGN || DEFAULT_RATES.NGN,
-      GBP: data.rates.GBP || DEFAULT_RATES.GBP,
-      EUR: data.rates.EUR || DEFAULT_RATES.EUR,
+      ...data.rates,
+      USD: 1, // Ensure base is correct
     };
 
     // Store rates locally

@@ -11,6 +11,7 @@ import { useTheme } from '../context/ThemeContext';
 import { IncomeItem } from '../components/IncomeItem';
 import { TaxSummaryCard } from '../components/TaxSummaryCard';
 import { calculateNigeriaTax } from '../utils/taxCalculator';
+import { convertFromNGN } from '../utils/currencyConverter';
 
 import { CustomAlert } from '../components/common/CustomAlert';
 
@@ -25,6 +26,14 @@ export const IncomeTrackerScreen = () => {
   const totalGrossNGN = incomes.reduce((sum, item) => sum + item.amountNGN, 0);
   const taxResults = calculateNigeriaTax(totalGrossNGN);
   const netIncome = totalGrossNGN - taxResults.tax;
+
+  const formatMoney = (val: number, cur: string) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: cur,
+      maximumFractionDigits: 0,
+    }).format(val);
+  };
 
   const handleReset = () => {
     setIsResetAlertVisible(true);
@@ -50,8 +59,13 @@ export const IncomeTrackerScreen = () => {
         >
           <Text style={[TYPOGRAPHY.label, { color: colors.accent, marginBottom: SIZES.tiny }]}>Cumulative Annual Gross</Text>
           <Text style={[TYPOGRAPHY.h1, { color: colors.text, fontSize: 42 }]}>
-            ₦{totalGrossNGN.toLocaleString()}
+            {formatMoney(totalGrossNGN, 'NGN')}
           </Text>
+          {settings.preferredCurrency !== 'NGN' && (
+            <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, marginTop: 4 }]}>
+              ≈ {formatMoney(convertFromNGN(totalGrossNGN, settings.preferredCurrency, settings.exchangeRates), settings.preferredCurrency)}
+            </Text>
+          )}
         </MotiView>
       </View>
 

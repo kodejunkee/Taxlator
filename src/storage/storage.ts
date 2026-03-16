@@ -8,7 +8,8 @@ const SETTINGS_KEY = '@user_settings';
 
 export const defaultSettings: UserSettings = {
   preferredCurrency: 'NGN',
-  exchangeRates: { USD: 1, NGN: 1500, GBP: 0.79, EUR: 0.92 }
+  exchangeRates: { USD: 1, NGN: 1500, GBP: 0.79, EUR: 0.92 },
+  currencyUsage: {}
 };
 
 export const StorageService = {

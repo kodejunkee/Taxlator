@@ -26,7 +26,6 @@ export const HomeScreen = () => {
   const totalSaved = savings.reduce((sum, item) => sum + item.amount, 0);
   const netIncome = totalGrossNGN - taxResults.tax;
 
-  const preferredGross = convertFromNGN(totalGrossNGN, settings.preferredCurrency, settings.exchangeRates);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -58,8 +57,6 @@ export const HomeScreen = () => {
             <TaxSummaryCard
               title="Gross Income"
               amountNGN={totalGrossNGN}
-              amountPreferred={settings.preferredCurrency !== 'NGN' ? preferredGross : undefined}
-              preferredCurrency={settings.preferredCurrency}
               type="primary"
               delay={200}
               showChart

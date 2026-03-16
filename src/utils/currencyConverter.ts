@@ -1,5 +1,6 @@
 import { Currency } from '../types/income';
 import { ExchangeRates } from '../types/settings';
+import { DEFAULT_RATES } from './exchangeRateService';
 
 export function convertToNGN(
   amount: number,
@@ -8,9 +9,12 @@ export function convertToNGN(
 ): number {
   if (currency === 'NGN') return amount;
   
-  // Convert from source currency to base (USD), then to NGN
-  const amountInUSD = amount / rates[currency];
-  return amountInUSD * rates['NGN'];
+  // Use provided rates or fallback to defaults to avoid NaN
+  const rate = rates[currency] || DEFAULT_RATES[currency] || 1;
+  const ngnRate = rates['NGN'] || DEFAULT_RATES['NGN'] || 1500;
+  
+  const amountInUSD = amount / rate;
+  return amountInUSD * ngnRate;
 }
 
 export function convertFromNGN(
@@ -20,7 +24,9 @@ export function convertFromNGN(
 ): number {
   if (currency === 'NGN') return amountNGN;
   
-  // Convert NGN to base (USD), then to target currency
-  const amountInUSD = amountNGN / rates['NGN'];
-  return amountInUSD * rates[currency];
+  const rate = rates[currency] || DEFAULT_RATES[currency] || 1;
+  const ngnRate = rates['NGN'] || DEFAULT_RATES['NGN'] || 1500;
+  
+  const amountInUSD = amountNGN / ngnRate;
+  return amountInUSD * rate;
 }

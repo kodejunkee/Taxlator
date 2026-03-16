@@ -9,7 +9,6 @@ import { Currency } from '../types/income';
 
 import { CustomAlert } from '../components/common/CustomAlert';
 
-const CURRENCIES: Currency[] = ['NGN', 'USD', 'GBP', 'EUR'];
 
 const THEMES: { label: string; value: ThemeMode; icon: any }[] = [
   { label: 'Light', value: 'light', icon: 'sunny-outline' },
@@ -22,9 +21,6 @@ export const SettingsScreen = () => {
   const { colors, mode, setMode } = useTheme();
   const [isSuccessVisible, setIsSuccessVisible] = React.useState(false);
 
-  const handleCurrencyChange = (currency: Currency) => {
-    updateSettings({ preferredCurrency: currency });
-  };
 
   const handleRefreshRates = async () => {
     await refreshRates();
@@ -54,35 +50,6 @@ export const SettingsScreen = () => {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <SettingSection 
-        title="Display Currency" 
-        description="Used for side-by-side comparison with NGN amounts."
-        delay={100}
-      >
-        <View style={styles.currencyRow}>
-          {CURRENCIES.map(c => (
-            <TouchableOpacity
-              key={c}
-              style={[
-                styles.selectableBtn,
-                { borderColor: colors.border },
-                settings.preferredCurrency === c && { backgroundColor: `${colors.primary}10`, borderColor: colors.primary }
-              ]}
-              onPress={() => handleCurrencyChange(c)}
-              activeOpacity={0.7}
-            >
-              <Text 
-                style={[
-                  TYPOGRAPHY.bodyMedium,
-                  { color: settings.preferredCurrency === c ? colors.primary : colors.textSecondary }
-                ]}
-              >
-                {c}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </SettingSection>
 
       <MotiView
         from={{ opacity: 0, translateY: 10 }}
