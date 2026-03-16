@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider } from './src/context/AppContext';
-import { ThemeProvider } from './src/context/ThemeContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { 
   useFonts, 
@@ -10,6 +10,11 @@ import {
   Outfit_600SemiBold, 
   Outfit_700Bold 
 } from '@expo-google-fonts/outfit';
+
+const ThemedStatusBar = () => {
+  const { isDark } = useTheme();
+  return <StatusBar style={isDark ? 'light' : 'dark'} />;
+};
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -27,8 +32,8 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AppProvider>
+          <ThemedStatusBar />
           <AppNavigator />
-          <StatusBar style="auto" />
         </AppProvider>
       </ThemeProvider>
     </SafeAreaProvider>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -12,26 +12,27 @@ import { IncomeItem } from '../components/IncomeItem';
 import { TaxSummaryCard } from '../components/TaxSummaryCard';
 import { calculateNigeriaTax } from '../utils/taxCalculator';
 
+import { CustomAlert } from '../components/common/CustomAlert';
+
 type NavProp = NativeStackNavigationProp<any>;
 
 export const IncomeTrackerScreen = () => {
   const navigation = useNavigation<NavProp>();
   const { incomes, savings, settings, clearIncomes } = useAppContext();
   const { colors, isDark } = useTheme();
+  const [isResetAlertVisible, setIsResetAlertVisible] = React.useState(false);
 
   const totalGrossNGN = incomes.reduce((sum, item) => sum + item.amountNGN, 0);
   const taxResults = calculateNigeriaTax(totalGrossNGN);
   const netIncome = totalGrossNGN - taxResults.tax;
 
   const handleReset = () => {
-    Alert.alert(
-      'Reset Year',
-      'Are you sure you want to delete all income records for the year?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Reset', style: 'destructive', onPress: clearIncomes },
-      ]
-    );
+    setIsResetAlertVisible(true);
+  };
+
+  const confirmReset = () => {
+    clearIncomes();
+    setIsResetAlertVisible(false);
   };
 
   return (
@@ -132,6 +133,15 @@ export const IncomeTrackerScreen = () => {
           <Ionicons name="add" size={32} color="#ffffff" />
         </TouchableOpacity>
       </MotiView>
+      <CustomAlert
+        visible={isResetAlertVisible}
+        title="Reset Year"
+        message="Are you sure you want to delete all income records for the year?"
+        confirmText="Reset"
+        isDestructive
+        onConfirm={confirmReset}
+        onCancel={() => setIsResetAlertVisible(false)}
+      />
     </View>
   );
 };

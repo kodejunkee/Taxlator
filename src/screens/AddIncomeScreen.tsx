@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +9,8 @@ import { useAppContext } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { Currency } from '../types/income';
 import { convertToNGN } from '../utils/currencyConverter';
+
+import { CustomAlert } from '../components/common/CustomAlert';
 
 const CURRENCIES: Currency[] = ['NGN', 'USD', 'GBP', 'EUR'];
 
@@ -20,11 +22,12 @@ export const AddIncomeScreen = () => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [currency, setCurrency] = useState<Currency>('NGN');
+  const [isErrorVisible, setIsErrorVisible] = useState(false);
 
   const handleSave = () => {
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount.');
+      setIsErrorVisible(true);
       return;
     }
 
@@ -123,6 +126,14 @@ export const AddIncomeScreen = () => {
           </TouchableOpacity>
         </MotiView>
       </MotiView>
+      <CustomAlert
+        visible={isErrorVisible}
+        title="Invalid Amount"
+        message="Please enter a valid amount before saving."
+        confirmText="Got it"
+        onConfirm={() => setIsErrorVisible(false)}
+        onCancel={() => setIsErrorVisible(false)}
+      />
     </ScrollView>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -11,11 +11,14 @@ import { useAppContext } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { calculateNigeriaTax } from '../utils/taxCalculator';
 
+import { CustomAlert } from '../components/common/CustomAlert';
+
 const { width: screenWidth } = Dimensions.get('window');
 
 export const ReportScreen = () => {
   const { incomes, savings } = useAppContext();
   const { colors, isDark } = useTheme();
+  const [isErrorVisible, setIsErrorVisible] = React.useState(false);
 
   const totalGrossNGN = incomes.reduce((sum, item) => sum + item.amountNGN, 0);
   const taxResults = calculateNigeriaTax(totalGrossNGN);
@@ -118,7 +121,7 @@ export const ReportScreen = () => {
       const { uri } = await Print.printToFileAsync({ html: htmlContent });
       await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
     } catch (error) {
-      Alert.alert('Error', 'Failed to generate PDF report.');
+      setIsErrorVisible(true);
     }
   };
 
@@ -202,6 +205,14 @@ export const ReportScreen = () => {
       </MotiView>
       
       <View style={{ height: 100 }} />
+      <CustomAlert
+        visible={isErrorVisible}
+        title="Export Failed"
+        message="Failed to generate or share the PDF report. Please try again."
+        confirmText="Got it"
+        onConfirm={() => setIsErrorVisible(false)}
+        onCancel={() => setIsErrorVisible(false)}
+      />
     </ScrollView>
   );
 };

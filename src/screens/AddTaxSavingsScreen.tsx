@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,12 +10,16 @@ import { useTheme } from '../context/ThemeContext';
 import { TaxProgressBar } from '../components/TaxProgressBar';
 import { calculateNigeriaTax } from '../utils/taxCalculator';
 
+import { CustomAlert } from '../components/common/CustomAlert';
+
 export const AddTaxSavingsScreen = () => {
   const navigation = useNavigation();
   const { incomes, savings, addSaving } = useAppContext();
   const { colors } = useTheme();
   
   const [amount, setAmount] = useState('');
+  const [isErrorVisible, setIsErrorVisible] = useState(false);
+  const [isSuccessVisible, setIsSuccessVisible] = useState(false);
 
   const totalGrossNGN = incomes.reduce((sum, item) => sum + item.amountNGN, 0);
   const taxResults = calculateNigeriaTax(totalGrossNGN);
@@ -24,7 +28,7 @@ export const AddTaxSavingsScreen = () => {
   const handleSave = () => {
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount.');
+      setIsErrorVisible(true);
       return;
     }
 
@@ -34,9 +38,7 @@ export const AddTaxSavingsScreen = () => {
     });
 
     setAmount('');
-    Alert.alert('Success', 'Tax savings added successfully!', [
-      { text: 'OK', onPress: () => navigation.goBack() }
-    ]);
+    setIsSuccessVisible(true);
   };
 
   return (
@@ -100,6 +102,29 @@ export const AddTaxSavingsScreen = () => {
           Adding savings helps you track how much of your estimated tax you've successfully set aside.
         </Text>
       </View>
+      <CustomAlert
+        visible={isErrorVisible}
+        title="Invalid Amount"
+        message="Please enter a valid savings amount."
+        confirmText="Got it"
+        onConfirm={() => setIsErrorVisible(false)}
+        onCancel={() => setIsErrorVisible(false)}
+      />
+      
+      <CustomAlert
+        visible={isSuccessVisible}
+        title="Success"
+        message="Tax savings added successfully!"
+        confirmText="OK"
+        onConfirm={() => {
+          setIsSuccessVisible(false);
+          navigation.goBack();
+        }}
+        onCancel={() => {
+          setIsSuccessVisible(false);
+          navigation.goBack();
+        }}
+      />
     </ScrollView>
   );
 };

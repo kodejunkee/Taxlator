@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
 import { useAppContext } from '../context/AppContext';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
 import { Currency } from '../types/income';
+
+import { CustomAlert } from '../components/common/CustomAlert';
 
 const CURRENCIES: Currency[] = ['NGN', 'USD', 'GBP', 'EUR'];
 
@@ -18,6 +20,7 @@ const THEMES: { label: string; value: ThemeMode; icon: any }[] = [
 export const SettingsScreen = () => {
   const { settings, updateSettings, refreshRates, isLoading } = useAppContext();
   const { colors, mode, setMode } = useTheme();
+  const [isSuccessVisible, setIsSuccessVisible] = React.useState(false);
 
   const handleCurrencyChange = (currency: Currency) => {
     updateSettings({ preferredCurrency: currency });
@@ -25,7 +28,7 @@ export const SettingsScreen = () => {
 
   const handleRefreshRates = async () => {
     await refreshRates();
-    Alert.alert('Success', 'Exchange rates updated successfully.');
+    setIsSuccessVisible(true);
   };
 
   const SettingSection = ({ title, description, children, delay = 0 }: any) => (
@@ -164,9 +167,17 @@ export const SettingsScreen = () => {
       </MotiView>
 
       <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, textAlign: 'center', marginTop: SIZES.large }]}>
-        Taxlator v1.0.0
+        Taxlator v1.0.1
       </Text>
       <View style={{ height: 100 }} />
+      <CustomAlert
+        visible={isSuccessVisible}
+        title="Success"
+        message="Exchange rates updated successfully."
+        confirmText="Done"
+        onConfirm={() => setIsSuccessVisible(false)}
+        onCancel={() => setIsSuccessVisible(false)}
+      />
     </ScrollView>
   );
 };
