@@ -48,7 +48,7 @@ export const HomeScreen = () => {
           animate={{ opacity: 1, translateY: 0 }}
           style={styles.header}
         >
-          <Text style={[TYPOGRAPHY.label, { color: colors.accent, marginBottom: 4 }]}>2026 Financial Overview</Text>
+          <Text style={[TYPOGRAPHY.label, { color: colors.accent, marginBottom: 4 }]}>Yearly Financial Overview</Text>
           <Text style={[TYPOGRAPHY.h1, { color: colors.text, fontSize: 38 }]}>Hello there.</Text>
           <Text style={[TYPOGRAPHY.body, { color: colors.textSecondary }]}>Ready to track your income?</Text>
         </MotiView>
@@ -146,6 +146,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: SIZES.large,
+    paddingTop: 0,
   },
   header: {
     marginTop: 60,

@@ -56,18 +56,18 @@ export const IncomeTrackerScreen = () => {
       </View>
 
       <View style={styles.metricsRow}>
-        <TaxSummaryCard 
-          title="Est. Tax" 
-          amountNGN={taxResults.tax} 
-          type="tax" 
+        <TaxSummaryCard
+          title="Est. Tax"
+          amountNGN={taxResults.tax}
+          type="tax"
           delay={200}
           size="small"
         />
         <View style={{ width: SIZES.small }} />
-        <TaxSummaryCard 
-          title="Net Income" 
-          amountNGN={netIncome} 
-          type="income" 
+        <TaxSummaryCard
+          title="Net Income"
+          amountNGN={netIncome}
+          type="income"
           delay={300}
           size="small"
         />
@@ -94,8 +94,8 @@ export const IncomeTrackerScreen = () => {
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ delay: 400 + index * 50 }}
           >
-            <IncomeItem 
-              item={item} 
+            <IncomeItem
+              item={item}
               preferredCurrency={settings.preferredCurrency}
               exchangeRates={settings.exchangeRates}
             />
@@ -104,9 +104,9 @@ export const IncomeTrackerScreen = () => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <MotiView 
-            from={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
+          <MotiView
+            from={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 500 }}
             style={styles.emptyContainer}
           >
@@ -125,8 +125,8 @@ export const IncomeTrackerScreen = () => {
         transition={{ type: 'spring', delay: 800 }}
         style={styles.fabContainer}
       >
-        <TouchableOpacity 
-          style={[styles.fab, { backgroundColor: colors.accent }, SHADOWS.glow]} 
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: colors.accent }, SHADOWS.glow]}
           onPress={() => navigation.navigate('AddIncome')}
           activeOpacity={0.8}
         >
@@ -154,6 +154,7 @@ const styles = StyleSheet.create({
     height: 300,
     justifyContent: 'center',
     paddingHorizontal: SIZES.large,
+    marginTop: -90,
   },
   summaryContent: {
     marginTop: 40,

@@ -50,7 +50,7 @@ function MainTabs() {
         }
       }}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home', headerShown: false }} />
       <Tab.Screen name="Calculator" component={SalaryCalculatorScreen} options={{ title: 'Calculator' }} />
       <Tab.Screen name="Tracker" component={IncomeTrackerScreen} options={{ title: 'Income' }} />
       <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
@@ -87,17 +87,23 @@ export function AppNavigator() {
         <Stack.Screen 
           name="AddIncome" 
           component={AddIncomeScreen} 
-          options={{ header: () => <PremiumHeader title="Add Income" /> }} 
+          options={({ navigation }) => ({ 
+            header: () => <PremiumHeader title="Add Income" onBack={() => navigation.goBack()} /> 
+          })} 
         />
         <Stack.Screen 
           name="AddTaxSavings" 
           component={AddTaxSavingsScreen} 
-          options={{ header: () => <PremiumHeader title="Add Tax Savings" /> }} 
+          options={({ navigation }) => ({ 
+            header: () => <PremiumHeader title="Add Tax Savings" onBack={() => navigation.goBack()} /> 
+          })} 
         />
         <Stack.Screen 
           name="Report" 
           component={ReportScreen} 
-          options={{ header: () => <PremiumHeader title="Yearly Report" /> }} 
+          options={({ navigation }) => ({ 
+            header: () => <PremiumHeader title="Yearly Report" onBack={() => navigation.goBack()} /> 
+          })} 
         />
       </Stack.Navigator>
     </NavigationContainer>

@@ -60,7 +60,6 @@ export const SalaryCalculatorScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <PremiumHeader title="Calculator" />
       
       <ScrollView 
         contentContainerStyle={styles.content}

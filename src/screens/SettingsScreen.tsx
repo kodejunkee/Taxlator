@@ -55,45 +55,9 @@ export const SettingsScreen = () => {
       showsVerticalScrollIndicator={false}
     >
       <SettingSection 
-        title="Appearance" 
-        description="Choose your preferred theme for the application."
-        delay={100}
-      >
-        <View style={styles.themeRow}>
-          {THEMES.map(t => (
-            <TouchableOpacity
-              key={t.value}
-              style={[
-                styles.selectableBtn,
-                { borderColor: colors.border },
-                mode === t.value && { backgroundColor: `${colors.primary}10`, borderColor: colors.primary }
-              ]}
-              onPress={() => setMode(t.value)}
-              activeOpacity={0.7}
-            >
-              <Ionicons 
-                name={t.icon} 
-                size={20} 
-                color={mode === t.value ? colors.primary : colors.textSecondary} 
-                style={{ marginBottom: 6 }}
-              />
-              <Text 
-                style={[
-                  TYPOGRAPHY.captionMedium,
-                  { color: mode === t.value ? colors.primary : colors.textSecondary }
-                ]}
-              >
-                {t.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </SettingSection>
-
-      <SettingSection 
         title="Display Currency" 
         description="Used for side-by-side comparison with NGN amounts."
-        delay={200}
+        delay={100}
       >
         <View style={styles.currencyRow}>
           {CURRENCIES.map(c => (
@@ -123,7 +87,7 @@ export const SettingsScreen = () => {
       <MotiView
         from={{ opacity: 0, translateY: 10 }}
         animate={{ opacity: 1, translateY: 0 }}
-        transition={{ delay: 300 }}
+        transition={{ delay: 200 }}
         style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
       >
         <View style={styles.ratesHeader}>
@@ -165,6 +129,42 @@ export const SettingsScreen = () => {
           </View>
         ))}
       </MotiView>
+
+      <SettingSection 
+        title="Appearance" 
+        description="Choose your preferred theme for the application."
+        delay={300}
+      >
+        <View style={styles.themeRow}>
+          {THEMES.map(t => (
+            <TouchableOpacity
+              key={t.value}
+              style={[
+                styles.selectableBtn,
+                { borderColor: colors.border },
+                mode === t.value && { backgroundColor: `${colors.primary}10`, borderColor: colors.primary }
+              ]}
+              onPress={() => setMode(t.value)}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name={t.icon} 
+                size={20} 
+                color={mode === t.value ? colors.primary : colors.textSecondary} 
+                style={{ marginBottom: 6 }}
+              />
+              <Text 
+                style={[
+                  TYPOGRAPHY.captionMedium,
+                  { color: mode === t.value ? colors.primary : colors.textSecondary }
+                ]}
+              >
+                {t.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </SettingSection>
 
       <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, textAlign: 'center', marginTop: SIZES.large }]}>
         Taxlator v1.0.1

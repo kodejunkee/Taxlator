@@ -126,7 +126,7 @@ export const ReportScreen = () => {
   };
 
   const SummaryItem = ({ label, value, color = colors.text, delay = 0 }: any) => (
-    <MotiView 
+    <MotiView
       from={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay }}
@@ -138,7 +138,7 @@ export const ReportScreen = () => {
   );
 
   return (
-    <ScrollView 
+    <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
@@ -203,7 +203,7 @@ export const ReportScreen = () => {
           </LinearGradient>
         </TouchableOpacity>
       </MotiView>
-      
+
       <View style={{ height: 100 }} />
       <CustomAlert
         visible={isErrorVisible}
@@ -222,6 +222,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
+    paddingTop: 0,
     padding: SIZES.large,
   },
   card: {
