@@ -9,6 +9,7 @@ import { useAppContext } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { Currency } from '../types/income';
 import { convertToNGN } from '../utils/currencyConverter';
+import { getCurrencySymbol, formatInputAmount, parseFormattedAmount } from '../utils/formatters';
 
 import { CustomAlert } from '../components/common/CustomAlert';
 
@@ -25,7 +26,7 @@ export const AddIncomeScreen = () => {
   const [isErrorVisible, setIsErrorVisible] = useState(false);
 
   const handleSave = () => {
-    const numAmount = parseFloat(amount);
+    const numAmount = parseFormattedAmount(amount);
     if (!numAmount || numAmount <= 0) {
       setIsErrorVisible(true);
       return;
@@ -59,14 +60,16 @@ export const AddIncomeScreen = () => {
       >
         <Text style={[TYPOGRAPHY.label, { color: colors.textSecondary, marginBottom: SIZES.small }]}>Amount</Text>
         <View style={[styles.inputContainer, { borderBottomColor: colors.border }]}>
-          <Text style={[styles.currencySymbol, { color: colors.text }]}>₦</Text>
+          <Text style={[styles.currencySymbol, { color: colors.text }]}>
+            {getCurrencySymbol(currency)}
+          </Text>
           <TextInput
             style={[styles.input, { color: colors.text }]}
             keyboardType="numeric"
             placeholder="0.00"
             placeholderTextColor={colors.textSecondary}
             value={amount}
-            onChangeText={setAmount}
+            onChangeText={(text) => setAmount(formatInputAmount(text))}
             autoFocus
           />
         </View>

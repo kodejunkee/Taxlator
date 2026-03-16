@@ -8,16 +8,17 @@ import { Currency } from '../types/income';
 import { convertToNGN, convertFromNGN } from '../utils/currencyConverter';
 import { calculateNigeriaTax } from '../utils/taxCalculator';
 import { PremiumHeader } from '../components/PremiumHeader';
+import { getCurrencySymbol, formatInputAmount, parseFormattedAmount } from '../utils/formatters';
 
 const CURRENCIES: Currency[] = ['NGN', 'USD', 'GBP', 'EUR'];
 
 export const SalaryCalculatorScreen = () => {
   const { settings } = useAppContext();
   const { colors, isDark } = useTheme();
-  const [salary, setSalary] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>('NGN');
+  const [salary, setSalary] = useState('');
 
-  const numericSalary = parseFloat(salary) || 0;
+  const numericSalary = parseFormattedAmount(salary);
   
   const monthlySalaryNGN = convertToNGN(numericSalary, selectedCurrency, settings.exchangeRates);
   const annualGrossNGN = monthlySalaryNGN * 12;
@@ -73,14 +74,16 @@ export const SalaryCalculatorScreen = () => {
         >
           <Text style={[TYPOGRAPHY.label, { color: colors.accent, marginBottom: SIZES.tiny }]}>Monthly Gross Salary</Text>
           <View style={styles.inputWrapper}>
-            <Text style={[styles.currencySymbol, { color: colors.textSecondary }]}>₦</Text>
+            <Text style={[styles.currencySymbol, { color: colors.textSecondary }]}>
+              {getCurrencySymbol(selectedCurrency)}
+            </Text>
             <TextInput
               style={[styles.input, { color: colors.text }]}
               keyboardType="numeric"
               placeholder="0.00"
               placeholderTextColor={isDark ? '#334155' : '#CBD5E1'}
               value={salary}
-              onChangeText={setSalary}
+              onChangeText={(text) => setSalary(formatInputAmount(text))}
             />
           </View>
 
