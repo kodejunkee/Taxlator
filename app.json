@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Taxlator",
+    "slug": "Taxlator",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#04070D"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#04070D",
+        "foregroundImage": "./assets/icon.png",
+        "backgroundImage": "./assets/icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sharing"
+    ]
+  }
+}

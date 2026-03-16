@@ -1,0 +1,245 @@
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from 'react-native';
+import { LineChart } from 'react-native-chart-kit';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+import { MotiView } from 'moti';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
+import { useAppContext } from '../context/AppContext';
+import { useTheme } from '../context/ThemeContext';
+import { calculateNigeriaTax } from '../utils/taxCalculator';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+export const ReportScreen = () => {
+  const { incomes, savings } = useAppContext();
+  const { colors, isDark } = useTheme();
+
+  const totalGrossNGN = incomes.reduce((sum, item) => sum + item.amountNGN, 0);
+  const taxResults = calculateNigeriaTax(totalGrossNGN);
+  const totalSaved = savings.reduce((sum, item) => sum + item.amount, 0);
+
+  // Group incomes by month for the chart
+  const monthlyData = new Array(12).fill(0);
+  incomes.forEach(income => {
+    const date = new Date(income.date);
+    const month = date.getMonth(); // 0 - 11
+    monthlyData[month] += income.amountNGN;
+  });
+
+  const chartData = {
+    labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
+    datasets: [
+      {
+        data: monthlyData,
+        color: (opacity = 1) => colors.primary,
+        strokeWidth: 3
+      }
+    ]
+  };
+
+  const formatMoney = (val: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      maximumFractionDigits: 0,
+    }).format(val);
+  };
+
+  const generatePDF = async () => {
+    const htmlContent = `
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+            body { font-family: 'Outfit', sans-serif; padding: 40px; color: #1f2937; background-color: #ffffff; }
+            .header { border-bottom: 2px solid ${colors.primary}; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; }
+            .brand { color: ${colors.primary}; font-size: 28px; font-weight: 700; }
+            .date { color: #6b7280; font-size: 14px; }
+            .summary-card { background-color: #f9fafb; border-radius: 12px; padding: 24px; margin-bottom: 30px; }
+            .section-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 16px; font-weight: 600; }
+            .row { display: flex; justify-content: space-between; margin-bottom: 12px; }
+            .label { color: #4b5563; }
+            .value { font-weight: 600; color: #111827; }
+            .tax { color: #e11d48; }
+            .income { color: #059669; }
+            .footer { margin-top: 60px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="brand">Taxlator</div>
+            <div class="date">Report Date: ${new Date().toLocaleDateString('en-NG', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+          </div>
+
+          <div class="summary-card">
+            <div class="section-title">Income & Tax Summary</div>
+            <div class="row">
+              <span class="label">Annual Gross Income</span>
+              <span class="value">${formatMoney(totalGrossNGN)}</span>
+            </div>
+            <div class="row">
+              <span class="label">Estimated Tax Liability (2026 Rules)</span>
+              <span class="value tax">${formatMoney(taxResults.tax)}</span>
+            </div>
+            <div class="row">
+              <span class="label">Calculated Net Income</span>
+              <span class="value income">${formatMoney(taxResults.netIncome)}</span>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <div class="section-title">Compliance & Savings</div>
+            <div class="row">
+              <span class="label">Tax Savings Realized</span>
+              <span class="value income">${formatMoney(totalSaved)}</span>
+            </div>
+            <div class="row">
+              <span class="label">Unfunded Tax Liability</span>
+              <span class="value tax">${formatMoney(Math.max(taxResults.tax - totalSaved, 0))}</span>
+            </div>
+            <div class="row">
+              <span class="label">Effective Tax Rate</span>
+              <span class="value">${taxResults.effectiveTaxRate.toFixed(2)}%</span>
+            </div>
+          </div>
+
+          <div class="footer">
+            Confidential Tax Report • Generated by Taxlator Mobile
+          </div>
+        </body>
+      </html>
+    `;
+
+    try {
+      const { uri } = await Print.printToFileAsync({ html: htmlContent });
+      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to generate PDF report.');
+    }
+  };
+
+  const SummaryItem = ({ label, value, color = colors.text, delay = 0 }: any) => (
+    <MotiView 
+      from={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay }}
+      style={[styles.summaryItem, { borderBottomColor: colors.border }]}
+    >
+      <Text style={[TYPOGRAPHY.body, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[TYPOGRAPHY.bodyBold, { color }]}>{value}</Text>
+    </MotiView>
+  );
+
+  return (
+    <ScrollView 
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <MotiView
+        from={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+      >
+        <Text style={[TYPOGRAPHY.h3, { color: colors.text, marginBottom: SIZES.large }]}>Yearly Summary</Text>
+        <SummaryItem label="Total Income" value={formatMoney(totalGrossNGN)} delay={200} />
+        <SummaryItem label="Estimated Tax" value={formatMoney(taxResults.tax)} color={colors.tax} delay={300} />
+        <SummaryItem label="Net Income" value={formatMoney(taxResults.netIncome)} color={colors.income} delay={400} />
+        <SummaryItem label="Tax Savings" value={formatMoney(totalSaved)} delay={500} />
+      </MotiView>
+
+      <MotiView
+        from={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ delay: 600 }}
+        style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+      >
+        <Text style={[TYPOGRAPHY.h3, { color: colors.text, marginBottom: SIZES.medium }]}>Income Trend</Text>
+        <LineChart
+          data={chartData}
+          width={screenWidth - SIZES.large * 2 - SIZES.medium * 2}
+          height={200}
+          chartConfig={{
+            backgroundColor: colors.card,
+            backgroundGradientFrom: colors.card,
+            backgroundGradientTo: colors.card,
+            decimalPlaces: 0,
+            color: (opacity = 1) => colors.primary,
+            labelColor: (opacity = 1) => colors.textSecondary,
+            style: { borderRadius: 16 },
+            propsForDots: { r: "5", strokeWidth: "2", stroke: colors.primary },
+            propsForBackgroundLines: { strokeDasharray: "", stroke: isDark ? '#1f2937' : '#f3f4f6' }
+          }}
+          bezier
+          style={styles.chart}
+          yAxisLabel="₦"
+          withInnerLines={true}
+          withOuterLines={false}
+          withVerticalLines={false}
+        />
+      </MotiView>
+
+      <MotiView
+        from={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 800 }}
+      >
+        <TouchableOpacity onPress={generatePDF} activeOpacity={0.8} style={styles.exportBtnContainer}>
+          <LinearGradient
+            colors={[colors.primary, colors.gradientEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[styles.exportBtn, SHADOWS.glow]}
+          >
+            <Ionicons name="cloud-download-outline" size={20} color="#ffffff" style={{ marginRight: 8 }} />
+            <Text style={[TYPOGRAPHY.bodyMedium, { color: '#ffffff' }]}>Export Full PDF Report</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </MotiView>
+      
+      <View style={{ height: 100 }} />
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: SIZES.large,
+  },
+  card: {
+    padding: SIZES.large,
+    borderRadius: SIZES.radius,
+    marginBottom: SIZES.large,
+    borderWidth: 1,
+    ...SHADOWS.soft,
+  },
+  summaryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: SIZES.medium,
+    borderBottomWidth: 1,
+    alignItems: 'center',
+  },
+  chart: {
+    marginVertical: 8,
+    borderRadius: 16,
+    marginLeft: -10,
+  },
+  exportBtnContainer: {
+    marginTop: SIZES.small,
+  },
+  exportBtn: {
+    flexDirection: 'row',
+    paddingVertical: SIZES.medium,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
