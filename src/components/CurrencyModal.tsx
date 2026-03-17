@@ -8,11 +8,12 @@ import {
   TextInput,
   SectionList,
   Image,
-  SafeAreaView,
   Dimensions,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Pressable
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { SIZES, TYPOGRAPHY, FONTS, SHADOWS } from '../theme';
@@ -32,10 +33,72 @@ const { height } = Dimensions.get('window');
 const ITEM_HEIGHT = 65; // Rigid height
 const HEADER_HEIGHT = 36; // Rigid height
 
+// Memoized Item Component to prevent unnecessary re-renders
+const CurrencyItem = React.memo(({ item, selectedCurrency, onSelect, colors }: any) => {
+  const isSelected = selectedCurrency === item.code;
+  
+  return (
+    <TouchableOpacity
+      style={[
+        styles.currencyItem,
+        { borderBottomColor: colors.border },
+        isSelected && { backgroundColor: `${colors.primary}10` }
+      ]}
+      onPress={() => onSelect(item.code)}
+      activeOpacity={0.7}
+    >
+      <Image
+        source={{ uri: `https://flagcdn.com/w160/${item.flag}.png` }}
+        style={styles.flagIcon}
+      />
+      <View style={styles.currencyInfo}>
+        <Text style={[TYPOGRAPHY.bodyBold, { color: colors.text }]}>{item.name}</Text>
+        <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary }]}>{item.code}</Text>
+      </View>
+      {isSelected && (
+        <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
+      )}
+    </TouchableOpacity>
+  );
+});
+
+const AlphabetSidebar = React.memo(({ letters, activeLetter, onLetterPress, colors }: any) => {
+  return (
+    <View style={styles.alphabetBar}>
+      {letters.map((letter: string, index: number) => {
+        const isActive = activeLetter === letter;
+        return (
+          <Pressable 
+            key={letter} 
+            onPress={() => onLetterPress(index)}
+            style={({ pressed }) => [
+              styles.letterBtn,
+              (pressed || isActive) && { backgroundColor: `${colors.primary}20`, borderRadius: 10 }
+            ]}
+          >
+            {({ pressed }) => (
+              <Text style={[
+                styles.alphabetText, 
+                { 
+                  color: (pressed || isActive) ? colors.primary : colors.textSecondary,
+                  opacity: (pressed || isActive) ? 1 : 0.6
+                }
+              ]}>
+                {letter}
+              </Text>
+            )}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+});
+
 export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, selectedCurrency }) => {
   const { colors, isDark } = useTheme();
   const { settings, logCurrencyUsage } = useAppContext();
   const [search, setSearch] = useState('');
+  const [activeLetter, setActiveLetter] = useState<string | null>(null);
 
   const filteredCurrencies = useMemo(() => {
     if (!search) return ALL_CURRENCIES;
@@ -68,7 +131,6 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
 
     const remaining = filteredCurrencies.filter(c => !commonlyUsedCodes.includes(c.code));
     const grouped = remaining.reduce((acc, curr) => {
-      // Grouping by first letter of Currency Name
       const letter = curr.name.charAt(0).toUpperCase();
       if (!acc[letter]) acc[letter] = [];
       acc[letter].push(curr);
@@ -89,17 +151,40 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
 
   const sectionListRef = useRef<SectionList>(null);
 
-  const scrollToSection = (index: number) => {
+  const scrollToSection = React.useCallback((index: number) => {
+    const letter = letters[index];
+    setActiveLetter(letter); 
+    
     const actualIndex = commonlyUsed.length > 0 ? index + 1 : index;
     sectionListRef.current?.scrollToLocation({
       sectionIndex: actualIndex,
       itemIndex: 0,
       animated: true,
-      viewOffset: 24, // Compensate for listContent paddingTop
+      viewOffset: 24,
     });
-  };
+  }, [commonlyUsed.length, letters]);
 
-  const getItemLayout = (data: any, index: number) => {
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 40, // Slightly more aggressive
+    minimumViewTime: 10, // Very low to feel snappy
+  }).current;
+
+  // Track the current letter so we don't trigger state updates on every scroll tick
+  const currentLetterRef = useRef<string | null>(null);
+
+  const onViewableItemsChanged = useRef(({ viewableItems }: any) => {
+    if (viewableItems.length > 0) {
+      const firstSection = viewableItems[0].section;
+      const targetLetter = firstSection && !firstSection.isCommon ? firstSection.title : null;
+      
+      if (currentLetterRef.current !== targetLetter) {
+        currentLetterRef.current = targetLetter;
+        setActiveLetter(targetLetter);
+      }
+    }
+  }).current;
+
+  const getItemLayout = React.useCallback((data: any, index: number) => {
     let offset = 0;
     let flatIndex = 0;
 
@@ -107,14 +192,12 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
       const section = sections[i];
       const currentHeaderHeight = section.title ? HEADER_HEIGHT : 0;
       
-      // Section Header matches flat index
       if (flatIndex === index) {
         return { length: currentHeaderHeight, offset, index };
       }
       offset += currentHeaderHeight;
       flatIndex++;
 
-      // Items within the section
       for (let j = 0; j < section.data.length; j++) {
         if (flatIndex === index) {
           return { length: ITEM_HEIGHT, offset, index };
@@ -123,7 +206,6 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
         flatIndex++;
       }
       
-      // Section footer (React Native ALWAYS allocates a flat index for this)
       if (flatIndex === index) {
         return { length: 0, offset, index };
       }
@@ -131,37 +213,34 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
     }
 
     return { length: 0, offset, index };
-  };
+  }, [sections]);
 
-  const renderCurrencyItem = ({ item }: { item: any }) => {
+  const handleSelect = React.useCallback((code: string) => {
+    onSelect(code);
+    logCurrencyUsage(code);
+    onClose();
+  }, [onSelect, logCurrencyUsage, onClose]);
 
-    return (
-      <TouchableOpacity
-        style={[
-          styles.currencyItem,
-          { borderBottomColor: colors.border },
-          selectedCurrency === item.code && { backgroundColor: `${colors.primary}10` }
-        ]}
-        onPress={() => {
-          onSelect(item.code);
-          logCurrencyUsage(item.code);
-          onClose();
-        }}
-      >
-        <Image
-          source={{ uri: `https://flagcdn.com/w160/${item.flag}.png` }}
-          style={styles.flagIcon}
-        />
-        <View style={styles.currencyInfo}>
-          <Text style={[TYPOGRAPHY.bodyBold, { color: colors.text }]}>{item.name}</Text>
-          <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary }]}>{item.code}</Text>
-        </View>
-        {selectedCurrency === item.code && (
-          <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
-        )}
-      </TouchableOpacity>
-    );
-  };
+  const renderCurrencyItem = React.useCallback(({ item }: { item: any }) => (
+    <CurrencyItem 
+      item={item} 
+      selectedCurrency={selectedCurrency} 
+      onSelect={handleSelect}
+      colors={colors}
+    />
+  ), [selectedCurrency, handleSelect, colors]);
+
+  const renderSectionHeader = React.useCallback(({ section: { title, isCommon } }: any) => (
+    title ? (
+      <View style={{ backgroundColor: colors.background, height: HEADER_HEIGHT, justifyContent: 'center', paddingHorizontal: 4 }}>
+        <Text style={[TYPOGRAPHY.label, { color: isCommon ? colors.accent : colors.textSecondary }]}>
+          {title}
+        </Text>
+      </View>
+    ) : <View style={{ height: 0 }} />
+  ), [colors]);
+
+  const keyExtractor = React.useCallback((item: any) => item.code, []);
 
   return (
     <Modal
@@ -179,7 +258,7 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
             <SafeAreaView style={styles.safeArea}>
               <View style={styles.header}>
                 <Text style={[TYPOGRAPHY.h3, { color: colors.text }]}>Change Currency</Text>
-                <TouchableOpacity onPress={() => { onClose(); }} style={styles.closeBtn}>
+                <TouchableOpacity onPress={() => { onClose(); setSearch(''); }} style={styles.closeBtn}>
                   <Ionicons name="close" size={24} color={colors.text} />
                 </TouchableOpacity>
               </View>
@@ -192,44 +271,34 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
                   placeholderTextColor={colors.textSecondary}
                   value={search}
                   onChangeText={setSearch}
+                  autoCorrect={false}
                 />
               </View>
 
               <SectionList
                 ref={sectionListRef}
                 sections={sections}
-                keyExtractor={(item) => item.code}
+                keyExtractor={keyExtractor}
                 renderItem={renderCurrencyItem}
-                renderSectionHeader={({ section: { title, isCommon } }) => (
-                  title ? (
-                    <View style={{ backgroundColor: colors.background, height: HEADER_HEIGHT, justifyContent: 'center', paddingHorizontal: 4 }}>
-                      <Text style={[TYPOGRAPHY.label, { color: isCommon ? colors.accent : colors.textSecondary }]}>
-                        {title}
-                      </Text>
-                    </View>
-                  ) : <View style={{ height: 0 }} />
-                )}
+                renderSectionHeader={renderSectionHeader}
                 contentContainerStyle={styles.listContent}
                 stickySectionHeadersEnabled={false}
                 showsVerticalScrollIndicator={false}
                 getItemLayout={getItemLayout}
+                initialNumToRender={15}
+                maxToRenderPerBatch={10}
+                windowSize={10}
+                removeClippedSubviews={Platform.OS === 'android'}
+                onViewableItemsChanged={onViewableItemsChanged}
+                viewabilityConfig={viewabilityConfig}
               />
               {!search && letters.length > 0 && (
-                <View style={[styles.alphabetBar, { backgroundColor: 'transparent' }]}>
-                  {letters.map((letter, index) => (
-                    <TouchableOpacity 
-                      key={letter} 
-                      onPress={() => {
-                        scrollToSection(index);
-                      }}
-                      style={styles.letterBtn}
-                    >
-                      <Text style={[styles.alphabetText, { color: colors.textSecondary }]}>
-                        {letter}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <AlphabetSidebar 
+                  letters={letters}
+                  activeLetter={activeLetter}
+                  onLetterPress={scrollToSection}
+                  colors={colors}
+                />
               )}
             </SafeAreaView>
           </View>
@@ -238,6 +307,7 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
     </Modal>
   );
 };
+
 
 const styles = StyleSheet.create({
   modalOverlay: {
