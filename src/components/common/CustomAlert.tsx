@@ -30,7 +30,6 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
   isDestructive = false,
 }) => {
   const { colors, isDark } = useTheme();
-  const { playClickSound } = useAppContext();
 
   if (!visible) return null;
 
@@ -86,7 +85,6 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
                   <TouchableOpacity
                     style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
                     onPress={() => {
-                      playClickSound();
                       onCancel();
                     }}
                     activeOpacity={0.7}
@@ -103,7 +101,6 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
                     !onCancel && { marginLeft: 0 }
                   ]}
                   onPress={() => {
-                    playClickSound();
                     onConfirm();
                   }}
                   activeOpacity={0.8}

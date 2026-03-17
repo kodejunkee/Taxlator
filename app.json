@@ -27,8 +27,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-sharing",
-      "expo-audio"
+      "expo-sharing"
     ],
     "extra": {
       "eas": {

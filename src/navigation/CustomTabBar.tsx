@@ -10,7 +10,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { colors } = useTheme();
-  const { playClickSound } = useAppContext();
   const insets = useSafeAreaInsets();
 
   return (
@@ -28,7 +27,6 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
           const isFocused = state.index === index;
 
           const onPress = () => {
-            playClickSound();
             const event = navigation.emit({
               type: 'tabPress',
               target: route.key,

@@ -14,14 +14,12 @@ interface Props {
 
 export const CurrencySelector: React.FC<Props> = ({ currencyCode, onPress, style }) => {
   const { colors, isDark } = useTheme();
-  const { playClickSound } = useAppContext();
   const data = getCurrencyData(currencyCode);
 
   return (
     <TouchableOpacity 
       style={[styles.container, style]}
       onPress={() => {
-        playClickSound();
         onPress();
       }}
       activeOpacity={0.7}

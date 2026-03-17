@@ -16,7 +16,7 @@ import { CustomAlert } from '../components/common/CustomAlert';
 const { width: screenWidth } = Dimensions.get('window');
 
 export const ReportScreen = () => {
-  const { incomes, savings, playClickSound } = useAppContext();
+  const { incomes, savings } = useAppContext();
   const { colors, isDark } = useTheme();
   const [isErrorVisible, setIsErrorVisible] = React.useState(false);
 
@@ -52,7 +52,6 @@ export const ReportScreen = () => {
   };
 
   const generatePDF = async () => {
-    playClickSound();
     const htmlContent = `
       <html>
         <head>

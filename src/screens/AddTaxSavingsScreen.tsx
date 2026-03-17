@@ -14,7 +14,7 @@ import { CustomAlert } from '../components/common/CustomAlert';
 
 export const AddTaxSavingsScreen = () => {
   const navigation = useNavigation();
-  const { incomes, savings, addSaving, playClickSound } = useAppContext();
+  const { incomes, savings, addSaving } = useAppContext();
   const { colors } = useTheme();
   
   const [amount, setAmount] = useState('');
@@ -26,7 +26,6 @@ export const AddTaxSavingsScreen = () => {
   const totalSaved = savings.reduce((sum, item) => sum + item.amount, 0);
 
   const handleSave = () => {
-    playClickSound();
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) {
       setIsErrorVisible(true);

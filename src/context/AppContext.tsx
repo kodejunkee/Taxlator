@@ -3,7 +3,6 @@ import { UserSettings } from '../types/settings';
 import { StorageService, defaultSettings } from '../storage/storage';
 import { fetchExchangeRates } from '../utils/exchangeRateService';
 import { IncomeEntry, TaxSavings } from '../types/income';
-import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 interface AppState {
   settings: UserSettings;
@@ -16,7 +15,6 @@ interface AppState {
   clearIncomes: () => Promise<void>;
   addSaving: (saving: TaxSavings) => Promise<void>;
   logCurrencyUsage: (code: string) => Promise<void>;
-  playClickSound: (force?: boolean) => void;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -27,21 +25,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [savings, setSavings] = useState<TaxSavings[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const clickPlayer = useAudioPlayer(require('../../assets/sounds/click.wav'));
-
   useEffect(() => {
-    const setupAudio = async () => {
-      try {
-        await setAudioModeAsync({
-          playsInSilentMode: true,
-          interruptionMode: 'mixWithOthers',
-          shouldPlayInBackground: false,
-        });
-      } catch (e) {
-        console.log('Audio setup failed', e);
-      }
-    };
-    setupAudio();
     loadInitialData();
   }, []);
 
@@ -105,20 +89,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await updateSettings({ currencyUsage: usage });
   };
 
-  const playClickSound = (force = false) => {
-    if (force || (settings.soundEnabled ?? true)) {
-      if (clickPlayer) {
-        clickPlayer.volume = 1.0;
-        clickPlayer.seekTo(0);
-        clickPlayer.play();
-      }
-    }
-  };
 
   return (
     <AppContext.Provider value={{
       settings, incomes, savings, isLoading,
-      updateSettings, refreshRates, addIncome, clearIncomes, addSaving, logCurrencyUsage, playClickSound
+      updateSettings, refreshRates, addIncome, clearIncomes, addSaving, logCurrencyUsage
     }}>
       {children}
     </AppContext.Provider>

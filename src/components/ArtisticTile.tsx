@@ -24,7 +24,6 @@ export const ArtisticTile: React.FC<ArtisticTileProps> = ({
   style 
 }) => {
   const { colors } = useTheme();
-  const { playClickSound } = useAppContext();
 
   return (
     <MotiView
@@ -36,7 +35,6 @@ export const ArtisticTile: React.FC<ArtisticTileProps> = ({
       <TouchableOpacity 
         style={[styles.tile, { backgroundColor: colors.card, borderColor: colors.border }]} 
         onPress={() => {
-          playClickSound();
           onPress();
         }}
         activeOpacity={0.7}

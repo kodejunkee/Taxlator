@@ -34,7 +34,7 @@ const HEADER_HEIGHT = 36; // Rigid height
 
 export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, selectedCurrency }) => {
   const { colors, isDark } = useTheme();
-  const { settings, logCurrencyUsage, playClickSound } = useAppContext();
+  const { settings, logCurrencyUsage } = useAppContext();
   const [search, setSearch] = useState('');
 
   const filteredCurrencies = useMemo(() => {
@@ -143,7 +143,6 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
           selectedCurrency === item.code && { backgroundColor: `${colors.primary}10` }
         ]}
         onPress={() => {
-          playClickSound();
           onSelect(item.code);
           logCurrencyUsage(item.code);
           onClose();
@@ -180,7 +179,7 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
             <SafeAreaView style={styles.safeArea}>
               <View style={styles.header}>
                 <Text style={[TYPOGRAPHY.h3, { color: colors.text }]}>Change Currency</Text>
-                <TouchableOpacity onPress={() => { playClickSound(); onClose(); }} style={styles.closeBtn}>
+                <TouchableOpacity onPress={() => { onClose(); }} style={styles.closeBtn}>
                   <Ionicons name="close" size={24} color={colors.text} />
                 </TouchableOpacity>
               </View>
@@ -221,7 +220,6 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
                     <TouchableOpacity 
                       key={letter} 
                       onPress={() => {
-                        playClickSound();
                         scrollToSection(index);
                       }}
                       style={styles.letterBtn}
