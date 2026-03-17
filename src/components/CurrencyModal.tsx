@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Modal, 
-  TouchableOpacity, 
-  TextInput, 
-  FlatList, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  TextInput,
+  FlatList,
   Image,
   SafeAreaView,
   Dimensions
@@ -34,8 +34,8 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
   const filteredCurrencies = useMemo(() => {
     if (!search) return ALL_CURRENCIES;
     const s = search.toLowerCase();
-    return ALL_CURRENCIES.filter(c => 
-      c.code.toLowerCase().includes(s) || 
+    return ALL_CURRENCIES.filter(c =>
+      c.code.toLowerCase().includes(s) ||
       c.name.toLowerCase().includes(s)
     );
   }, [search]);
@@ -60,9 +60,9 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
     }
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
-          styles.currencyItem, 
+          styles.currencyItem,
           { borderBottomColor: colors.border },
           selectedCurrency === item.code && { backgroundColor: `${colors.primary}10` }
         ]}
@@ -72,9 +72,9 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
           onClose();
         }}
       >
-        <Image 
-          source={{ uri: `https://flagcdn.com/w160/${item.flag}.png` }} 
-          style={styles.flagIcon} 
+        <Image
+          source={{ uri: `https://flagcdn.com/w160/${item.flag}.png` }}
+          style={styles.flagIcon}
         />
         <View style={styles.currencyInfo}>
           <Text style={[TYPOGRAPHY.bodyBold, { color: colors.text }]}>{item.name}</Text>
@@ -108,7 +108,7 @@ export const CurrencyModal: React.FC<Props> = ({ visible, onClose, onSelect, sel
               <Ionicons name="search" size={20} color={colors.textSecondary} />
               <TextInput
                 style={[styles.searchInput, { color: colors.text }]}
-                placeholder="Search currency or country/region"
+                placeholder="Search currency or country"
                 placeholderTextColor={colors.textSecondary}
                 value={search}
                 onChangeText={setSearch}

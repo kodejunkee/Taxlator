@@ -121,7 +121,6 @@ export const AddIncomeScreen = () => {
         message="Please enter a valid amount before saving."
         confirmText="Got it"
         onConfirm={() => setIsErrorVisible(false)}
-        onCancel={() => setIsErrorVisible(false)}
       />
 
       <CurrencyModal

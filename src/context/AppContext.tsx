@@ -34,11 +34,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const storedSettings = await StorageService.getSettings();
       const storedIncomes = await StorageService.getIncomes();
       const storedSavings = await StorageService.getSavings();
-      
+
       setSettings(storedSettings);
       setIncomes(storedIncomes);
       setSavings(storedSavings);
-      
+
       // Attempt background rate fetch
       fetchExchangeRates().then(rates => {
         const updatedSettings = { ...storedSettings, exchangeRates: rates };

@@ -2,13 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
 import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
 import { useAppContext } from '../context/AppContext';
 import { useTheme, ThemeMode } from '../context/ThemeContext';
 import { Currency } from '../types/income';
 
 import { CustomAlert } from '../components/common/CustomAlert';
-
 
 const THEMES: { label: string; value: ThemeMode; icon: any }[] = [
   { label: 'Light', value: 'light', icon: 'sunny-outline' },
@@ -19,12 +19,42 @@ const THEMES: { label: string; value: ThemeMode; icon: any }[] = [
 export const SettingsScreen = () => {
   const { settings, updateSettings, refreshRates, isLoading } = useAppContext();
   const { colors, mode, setMode } = useTheme();
-  const [isSuccessVisible, setIsSuccessVisible] = React.useState(false);
-
+  const [alertConfig, setAlertConfig] = React.useState({
+    visible: false,
+    title: '',
+    message: '',
+    isDestructive: false,
+  });
 
   const handleRefreshRates = async () => {
-    await refreshRates();
-    setIsSuccessVisible(true);
+    const netInfo = await NetInfo.fetch();
+    
+    if (!netInfo.isConnected || !netInfo.isInternetReachable) {
+      setAlertConfig({
+        visible: true,
+        title: 'No Internet Connection',
+        message: 'Please check your connection and try again.',
+        isDestructive: true,
+      });
+      return;
+    }
+
+    try {
+      await refreshRates();
+      setAlertConfig({
+        visible: true,
+        title: 'Success',
+        message: 'Exchange rates updated successfully.',
+        isDestructive: false,
+      });
+    } catch (error) {
+       setAlertConfig({
+        visible: true,
+        title: 'Sync Failed',
+        message: 'Could not fetch latest rates. Please try again later.',
+        isDestructive: true,
+      });
+    }
   };
 
   const SettingSection = ({ title, description, children, delay = 0 }: any) => (
@@ -138,12 +168,12 @@ export const SettingsScreen = () => {
       </Text>
       <View style={{ height: 100 }} />
       <CustomAlert
-        visible={isSuccessVisible}
-        title="Success"
-        message="Exchange rates updated successfully."
-        confirmText="Done"
-        onConfirm={() => setIsSuccessVisible(false)}
-        onCancel={() => setIsSuccessVisible(false)}
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        isDestructive={alertConfig.isDestructive}
+        confirmText="Got it"
+        onConfirm={() => setAlertConfig(prev => ({ ...prev, visible: false }))}
       />
     </ScrollView>
   );

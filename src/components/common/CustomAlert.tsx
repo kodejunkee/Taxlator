@@ -10,7 +10,7 @@ interface CustomAlertProps {
   title: string;
   message: string;
   onConfirm: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
   confirmText?: string;
   cancelText?: string;
   isDestructive?: boolean;
@@ -30,6 +30,8 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
 }) => {
   const { colors, isDark } = useTheme();
 
+  if (!visible) return null;
+
   return (
     <Modal transparent visible={visible} animationType="none">
       <AnimatePresence>
@@ -40,20 +42,21 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
               from={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 150 }}
               style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.6)' }]}
               onStartShouldSetResponder={() => true}
-              onResponderRelease={onCancel}
+              onResponderRelease={onCancel || onConfirm}
             />
 
             {/* Alert Box */}
             <MotiView
-              from={{ opacity: 0, scale: 0.9, translateY: 20 }}
-              animate={{ opacity: 1, scale: 1, translateY: 0 }}
-              exit={{ opacity: 0, scale: 0.9, translateY: 20 }}
-              transition={{ type: 'spring', damping: 15 }}
+              from={{ scale: 0.97, translateY: 10 }}
+              animate={{ scale: 1, translateY: 0 }}
+              exit={{ scale: 0.97, translateY: 10 }}
+              transition={{ type: 'spring', damping: 20 }}
               style={[
                 styles.alertBox,
-                { 
+                {
                   backgroundColor: colors.card,
                   borderColor: colors.border,
                 },
@@ -61,36 +64,39 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
               ]}
             >
               <View style={[styles.iconWrapper, { backgroundColor: isDestructive ? `${colors.tax}15` : `${colors.accent}15` }]}>
-                <Ionicons 
-                  name={isDestructive ? 'alert-circle-outline' : 'information-circle-outline'} 
-                  size={32} 
-                  color={isDestructive ? colors.tax : colors.accent} 
+                <Ionicons
+                  name={isDestructive ? 'alert-circle-outline' : 'information-circle-outline'}
+                  size={32}
+                  color={isDestructive ? colors.tax : colors.accent}
                 />
               </View>
 
               <Text style={[TYPOGRAPHY.h3, { color: colors.text, textAlign: 'center', marginBottom: SIZES.small }]}>
                 {title}
               </Text>
-              
+
               <Text style={[TYPOGRAPHY.body, { color: colors.textSecondary, textAlign: 'center', marginBottom: SIZES.large }]}>
                 {message}
               </Text>
 
               <View style={styles.buttonRow}>
-                <TouchableOpacity 
-                  style={[styles.button, styles.cancelButton, { borderColor: colors.border }]} 
-                  onPress={onCancel}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[TYPOGRAPHY.bodyMedium, { color: colors.textSecondary }]}>{cancelText}</Text>
-                </TouchableOpacity>
+                {onCancel && (
+                  <TouchableOpacity
+                    style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
+                    onPress={onCancel}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[TYPOGRAPHY.bodyMedium, { color: colors.textSecondary }]}>{cancelText}</Text>
+                  </TouchableOpacity>
+                )}
 
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[
-                    styles.button, 
-                    styles.confirmButton, 
-                    { backgroundColor: isDestructive ? colors.tax : colors.accent }
-                  ]} 
+                    styles.button,
+                    styles.confirmButton,
+                    { backgroundColor: isDestructive ? colors.tax : colors.accent },
+                    !onCancel && { marginLeft: 0 }
+                  ]}
                   onPress={onConfirm}
                   activeOpacity={0.8}
                 >
