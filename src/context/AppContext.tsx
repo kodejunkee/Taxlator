@@ -61,7 +61,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const refreshRates = async () => {
     setIsLoading(true);
     try {
-      const rates = await fetchExchangeRates();
+      const rates = await fetchExchangeRates(true);
       await updateSettings({ exchangeRates: rates });
     } finally {
       setIsLoading(false);

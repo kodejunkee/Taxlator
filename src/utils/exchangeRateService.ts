@@ -18,13 +18,13 @@ export const DEFAULT_RATES: ExchangeRates = {
   AED: 3.67,
 };
 
-export async function fetchExchangeRates(): Promise<ExchangeRates> {
+export async function fetchExchangeRates(forceRefresh: boolean = false): Promise<ExchangeRates> {
   try {
     const lastFetchStr = await AsyncStorage.getItem(LAST_FETCH_KEY);
     const today = new Date().toISOString().split('T')[0];
 
     // Check if we need to fetch new rates
-    if (lastFetchStr === today) {
+    if (!forceRefresh && lastFetchStr === today) {
       const storedRatesStr = await AsyncStorage.getItem(RATES_KEY);
       if (storedRatesStr) {
         const parsed = JSON.parse(storedRatesStr);
