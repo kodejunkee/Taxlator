@@ -15,6 +15,25 @@ const THEMES: { label: string; value: ThemeMode; icon: any }[] = [
   { label: 'Dark', value: 'dark', icon: 'moon-outline' },
   { label: 'System', value: 'system', icon: 'settings-outline' }
 ];
+const SettingSection = ({ title, description, children, delay = 0 }: any) => {
+  const { colors } = useTheme();
+  return (
+    <MotiView
+      from={{ opacity: 0, translateY: 10 }}
+      animate={{ opacity: 1, translateY: 0 }}
+      transition={{ delay }}
+      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
+    >
+      <Text style={[TYPOGRAPHY.h4, { color: colors.text }]}>{title}</Text>
+      {description && (
+        <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, marginTop: 4, marginBottom: SIZES.large }]}>
+          {description}
+        </Text>
+      )}
+      {children}
+    </MotiView>
+  );
+};
 
 export const SettingsScreen = () => {
   const { settings, updateSettings, refreshRates, isLoading, playClickSound } = useAppContext();
@@ -56,23 +75,6 @@ export const SettingsScreen = () => {
       });
     }
   };
-
-  const SettingSection = ({ title, description, children, delay = 0 }: any) => (
-    <MotiView
-      from={{ opacity: 0, translateY: 10 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      transition={{ delay }}
-      style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
-    >
-      <Text style={[TYPOGRAPHY.h4, { color: colors.text }]}>{title}</Text>
-      {description && (
-        <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, marginTop: 4, marginBottom: SIZES.large }]}>
-          {description}
-        </Text>
-      )}
-      {children}
-    </MotiView>
-  );
 
   return (
     <ScrollView

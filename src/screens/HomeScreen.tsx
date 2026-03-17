@@ -10,7 +10,6 @@ import { useAppContext } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { TaxSummaryCard } from '../components/TaxSummaryCard';
 import { ArtisticTile } from '../components/ArtisticTile';
-import { convertFromNGN } from '../utils/currencyConverter';
 import { calculateNigeriaTax } from '../utils/taxCalculator';
 
 const { width } = Dimensions.get('window');

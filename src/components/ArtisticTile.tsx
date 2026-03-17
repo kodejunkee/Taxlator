@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
 import { SIZES, SHADOWS, TYPOGRAPHY } from '../theme';
 import { useTheme } from '../context/ThemeContext';
+import { useAppContext } from '../context/AppContext';
 
 interface ArtisticTileProps {
   title: string;
@@ -23,6 +24,7 @@ export const ArtisticTile: React.FC<ArtisticTileProps> = ({
   style 
 }) => {
   const { colors } = useTheme();
+  const { playClickSound } = useAppContext();
 
   return (
     <MotiView
@@ -33,7 +35,10 @@ export const ArtisticTile: React.FC<ArtisticTileProps> = ({
     >
       <TouchableOpacity 
         style={[styles.tile, { backgroundColor: colors.card, borderColor: colors.border }]} 
-        onPress={onPress}
+        onPress={() => {
+          playClickSound();
+          onPress();
+        }}
         activeOpacity={0.7}
       >
         <View style={[styles.iconWrapper, { backgroundColor: `${color}15` }]}>

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { SIZES, TYPOGRAPHY, SHADOWS, FONTS } from '../theme';
 import { getCurrencyData } from '../utils/currencyData';
+import { useAppContext } from '../context/AppContext';
 
 interface Props {
   currencyCode: string;
@@ -13,12 +14,16 @@ interface Props {
 
 export const CurrencySelector: React.FC<Props> = ({ currencyCode, onPress, style }) => {
   const { colors, isDark } = useTheme();
+  const { playClickSound } = useAppContext();
   const data = getCurrencyData(currencyCode);
 
   return (
     <TouchableOpacity 
       style={[styles.container, style]}
-      onPress={onPress}
+      onPress={() => {
+        playClickSound();
+        onPress();
+      }}
       activeOpacity={0.7}
     >
       <View style={styles.inner}>

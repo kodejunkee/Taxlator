@@ -4,11 +4,13 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView, MotiText } from 'moti';
 import { useTheme } from '../context/ThemeContext';
+import { useAppContext } from '../context/AppContext';
 import { SIZES, SHADOWS, TYPOGRAPHY } from '../theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const { colors } = useTheme();
+  const { playClickSound } = useAppContext();
   const insets = useSafeAreaInsets();
 
   return (
@@ -26,6 +28,7 @@ export function CustomTabBar({ state, descriptors, navigation }: BottomTabBarPro
           const isFocused = state.index === index;
 
           const onPress = () => {
+            playClickSound();
             const event = navigation.emit({
               type: 'tabPress',
               target: route.key,

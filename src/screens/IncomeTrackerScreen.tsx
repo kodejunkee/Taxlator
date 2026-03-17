@@ -19,7 +19,7 @@ type NavProp = NativeStackNavigationProp<any>;
 
 export const IncomeTrackerScreen = () => {
   const navigation = useNavigation<NavProp>();
-  const { incomes, savings, settings, clearIncomes } = useAppContext();
+  const { incomes, savings, settings, clearIncomes, playClickSound } = useAppContext();
   const { colors, isDark } = useTheme();
   const [isResetAlertVisible, setIsResetAlertVisible] = React.useState(false);
 
@@ -36,6 +36,7 @@ export const IncomeTrackerScreen = () => {
   };
 
   const handleReset = () => {
+    playClickSound();
     setIsResetAlertVisible(true);
   };
 
@@ -141,7 +142,10 @@ export const IncomeTrackerScreen = () => {
       >
         <TouchableOpacity
           style={[styles.fab, { backgroundColor: colors.accent }, SHADOWS.glow]}
-          onPress={() => navigation.navigate('AddIncome')}
+          onPress={() => {
+            playClickSound();
+            navigation.navigate('AddIncome');
+          }}
           activeOpacity={0.8}
         >
           <Ionicons name="add" size={32} color="#ffffff" />

@@ -74,7 +74,6 @@ export const AddIncomeScreen = () => {
           <CurrencySelector
             currencyCode={currency}
             onPress={() => {
-              playClickSound();
               setIsModalVisible(true);
             }}
             style={styles.selector}
