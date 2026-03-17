@@ -19,7 +19,7 @@ const CURRENCIES = ['NGN', 'USD', 'GBP', 'EUR']; // Keep for something? Actually
 
 export const AddIncomeScreen = () => {
   const navigation = useNavigation();
-  const { addIncome, settings, updateSettings } = useAppContext();
+  const { addIncome, settings, updateSettings, playClickSound } = useAppContext();
   const { colors } = useTheme();
 
   const [amount, setAmount] = useState('');
@@ -36,6 +36,7 @@ export const AddIncomeScreen = () => {
   };
 
   const handleSave = () => {
+    playClickSound();
     const numAmount = parseFormattedAmount(amount);
     if (!numAmount || numAmount <= 0) {
       setIsErrorVisible(true);
@@ -72,7 +73,10 @@ export const AddIncomeScreen = () => {
         <View style={[styles.inputContainer, { borderBottomColor: colors.border }]}>
           <CurrencySelector
             currencyCode={currency}
-            onPress={() => setIsModalVisible(true)}
+            onPress={() => {
+              playClickSound();
+              setIsModalVisible(true);
+            }}
             style={styles.selector}
           />
           <TextInput

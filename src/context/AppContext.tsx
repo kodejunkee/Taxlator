@@ -3,6 +3,7 @@ import { UserSettings } from '../types/settings';
 import { StorageService, defaultSettings } from '../storage/storage';
 import { fetchExchangeRates } from '../utils/exchangeRateService';
 import { IncomeEntry, TaxSavings } from '../types/income';
+import { useAudioPlayer } from 'expo-audio';
 
 interface AppState {
   settings: UserSettings;
@@ -15,6 +16,7 @@ interface AppState {
   clearIncomes: () => Promise<void>;
   addSaving: (saving: TaxSavings) => Promise<void>;
   logCurrencyUsage: (code: string) => Promise<void>;
+  playClickSound: () => void;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -24,6 +26,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
   const [savings, setSavings] = useState<TaxSavings[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const clickPlayer = useAudioPlayer(require('../../assets/sounds/click.wav'));
 
   useEffect(() => {
     loadInitialData();
@@ -89,10 +93,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await updateSettings({ currencyUsage: usage });
   };
 
+  const playClickSound = () => {
+    if (settings.soundEnabled ?? true) {
+      if (clickPlayer) {
+        clickPlayer.seekTo(0);
+        clickPlayer.play();
+      }
+    }
+  };
+
   return (
     <AppContext.Provider value={{
       settings, incomes, savings, isLoading,
-      updateSettings, refreshRates, addIncome, clearIncomes, addSaving, logCurrencyUsage
+      updateSettings, refreshRates, addIncome, clearIncomes, addSaving, logCurrencyUsage, playClickSound
     }}>
       {children}
     </AppContext.Provider>

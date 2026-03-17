@@ -4,6 +4,7 @@ import { MotiView, AnimatePresence } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { SIZES, SHADOWS, TYPOGRAPHY } from '../../theme';
 import { useTheme } from '../../context/ThemeContext';
+import { useAppContext } from '../../context/AppContext';
 
 interface CustomAlertProps {
   visible: boolean;
@@ -29,6 +30,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
   isDestructive = false,
 }) => {
   const { colors, isDark } = useTheme();
+  const { playClickSound } = useAppContext();
 
   if (!visible) return null;
 
@@ -83,7 +85,10 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
                 {onCancel && (
                   <TouchableOpacity
                     style={[styles.button, styles.cancelButton, { borderColor: colors.border }]}
-                    onPress={onCancel}
+                    onPress={() => {
+                      playClickSound();
+                      onCancel();
+                    }}
                     activeOpacity={0.7}
                   >
                     <Text style={[TYPOGRAPHY.bodyMedium, { color: colors.textSecondary }]}>{cancelText}</Text>
@@ -97,7 +102,10 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
                     { backgroundColor: isDestructive ? colors.tax : colors.accent },
                     !onCancel && { marginLeft: 0 }
                   ]}
-                  onPress={onConfirm}
+                  onPress={() => {
+                    playClickSound();
+                    onConfirm();
+                  }}
                   activeOpacity={0.8}
                 >
                   <Text style={[TYPOGRAPHY.bodyBold, { color: '#FFFFFF' }]}>{confirmText}</Text>

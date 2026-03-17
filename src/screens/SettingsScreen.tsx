@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Switch } from 'react-native';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
@@ -17,7 +17,7 @@ const THEMES: { label: string; value: ThemeMode; icon: any }[] = [
 ];
 
 export const SettingsScreen = () => {
-  const { settings, updateSettings, refreshRates, isLoading } = useAppContext();
+  const { settings, updateSettings, refreshRates, isLoading, playClickSound } = useAppContext();
   const { colors, mode, setMode } = useTheme();
   const [alertConfig, setAlertConfig] = React.useState({
     visible: false,
@@ -163,6 +163,28 @@ export const SettingsScreen = () => {
         </View>
       </SettingSection>
 
+      <SettingSection
+        title="Preferences"
+        description="Manage app behavior and feedback."
+        delay={400}
+      >
+        <View style={styles.preferenceRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="volume-high-outline" size={24} color={colors.textSecondary} style={{ marginRight: 12 }} />
+            <Text style={[TYPOGRAPHY.bodyMedium, { color: colors.text }]}>Sound Effects</Text>
+          </View>
+          <Switch
+            value={settings.soundEnabled ?? true}
+            onValueChange={(val) => {
+              updateSettings({ soundEnabled: val });
+              if (val) playClickSound();
+            }}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={'#ffffff'}
+          />
+        </View>
+      </SettingSection>
+
       <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, textAlign: 'center', marginTop: SIZES.large }]}>
         Taxlator v1.0.0
       </Text>
@@ -196,6 +218,12 @@ const styles = StyleSheet.create({
   themeRow: {
     flexDirection: 'row',
     marginHorizontal: -4,
+  },
+  preferenceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
   },
   currencyRow: {
     flexDirection: 'row',
