@@ -53,8 +53,8 @@ export const IncomeTrackerScreen = () => {
           style={StyleSheet.absoluteFill}
         />
         <MotiView
-          from={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
+          from={{ translateY: 10 }}
+          animate={{ translateY: 0 }}
           style={styles.summaryContent}
         >
           <Text style={[TYPOGRAPHY.label, { color: colors.accent, marginBottom: SIZES.tiny }]}>Cumulative Annual Gross</Text>
@@ -104,8 +104,8 @@ export const IncomeTrackerScreen = () => {
         keyExtractor={item => item.id}
         renderItem={({ item, index }) => (
           <MotiView
-            from={{ opacity: 0, translateY: 10 }}
-            animate={{ opacity: 1, translateY: 0 }}
+            from={{ translateY: 5 }}
+            animate={{ translateY: 0 }}
             transition={{ delay: 400 + index * 50 }}
           >
             <IncomeItem
@@ -119,7 +119,6 @@ export const IncomeTrackerScreen = () => {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <MotiView
-            from={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 500 }}
             style={styles.emptyContainer}
@@ -134,9 +133,9 @@ export const IncomeTrackerScreen = () => {
       />
 
       <MotiView
-        from={{ scale: 0, rotate: '-45deg' }}
-        animate={{ scale: 1, rotate: '0deg' }}
-        transition={{ type: 'spring', delay: 800 }}
+        from={{ scale: 0.8 }}
+        animate={{ scale: 1 }}
+        transition={{ type: 'spring', delay: 800, damping: 20 }}
         style={styles.fabContainer}
       >
         <TouchableOpacity

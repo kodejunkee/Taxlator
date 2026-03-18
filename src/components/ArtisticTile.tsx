@@ -27,9 +27,9 @@ export const ArtisticTile: React.FC<ArtisticTileProps> = ({
 
   return (
     <MotiView
-      from={{ opacity: 0, scale: 0.9, translateY: 20 }}
-      animate={{ opacity: 1, scale: 1, translateY: 0 }}
-      transition={{ type: 'spring', delay, damping: 15 }}
+      from={{ scale: 0.98, translateY: 10 }}
+      animate={{ scale: 1, translateY: 0 }}
+      transition={{ type: 'spring', delay, damping: 22 }}
       style={[styles.container, style]}
     >
       <TouchableOpacity 

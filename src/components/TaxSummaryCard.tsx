@@ -64,9 +64,9 @@ export const TaxSummaryCard: React.FC<Props> = ({
 
   return (
     <MotiView
-      from={{ opacity: 0, scale: 0.95, translateY: 15 }}
-      animate={{ opacity: 1, scale: 1, translateY: 0 }}
-      transition={{ type: 'spring', delay, damping: 12 }}
+      from={{ scale: 0.98, translateY: 8 }}
+      animate={{ scale: 1, translateY: 0 }}
+      transition={{ type: 'spring', delay, damping: 20 }}
       style={[
         styles.container, 
         { flex: size === 'small' ? 1 : 0 },

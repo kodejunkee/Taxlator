@@ -42,8 +42,8 @@ export const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <MotiView
-          from={{ opacity: 0, translateY: -20 }}
-          animate={{ opacity: 1, translateY: 0 }}
+          from={{ translateY: -10 }}
+          animate={{ translateY: 0 }}
           style={styles.header}
         >
           <Text style={[TYPOGRAPHY.label, { color: colors.accent, marginBottom: 4 }]}>Yearly Financial Overview</Text>
@@ -82,7 +82,6 @@ export const HomeScreen = () => {
         </View>
 
         <MotiView
-          from={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 600 }}
           style={styles.sectionHeader}

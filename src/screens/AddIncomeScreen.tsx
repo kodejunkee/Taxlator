@@ -64,8 +64,8 @@ export const AddIncomeScreen = () => {
       showsVerticalScrollIndicator={false}
     >
       <MotiView
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
+        from={{ translateY: 10 }}
+        animate={{ translateY: 0 }}
         style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
       >
         <Text style={[TYPOGRAPHY.label, { color: colors.textSecondary, marginBottom: SIZES.small }]}>Amount</Text>
