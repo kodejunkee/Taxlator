@@ -4,7 +4,8 @@ export interface IncomeEntry {
   id: string;
   amount: number;
   currency: Currency;
-  amountNGN: number;
+  amountNGN?: number; // legacy compatibility mapping
+  amountBase: number;
   description: string;
   date: string;
 }

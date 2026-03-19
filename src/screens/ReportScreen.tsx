@@ -9,19 +9,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
 import { useAppContext } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
-import { calculateNigeriaTax } from '../utils/taxCalculator';
+import { calculateTax } from '../utils/taxCalculator';
+import { formatMoney, getCurrencySymbol } from '../utils/formatters';
 
 import { CustomAlert } from '../components/common/CustomAlert';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 export const ReportScreen = () => {
-  const { incomes, savings } = useAppContext();
+  const { incomes, savings, settings } = useAppContext();
   const { colors, isDark } = useTheme();
   const [isErrorVisible, setIsErrorVisible] = React.useState(false);
 
-  const totalGrossNGN = incomes.reduce((sum, item) => sum + item.amountNGN, 0);
-  const taxResults = calculateNigeriaTax(totalGrossNGN);
+  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
+  const totalGrossBase = incomes.reduce((sum, item) => sum + item.amountBase, 0);
+  const taxResults = calculateTax(totalGrossBase, settings.country);
   const totalSaved = savings.reduce((sum, item) => sum + item.amount, 0);
 
   // Group incomes by month for the chart
@@ -29,7 +31,7 @@ export const ReportScreen = () => {
   incomes.forEach(income => {
     const date = new Date(income.date);
     const month = date.getMonth(); // 0 - 11
-    monthlyData[month] += income.amountNGN;
+    monthlyData[month] += income.amountBase;
   });
 
   const chartData = {
@@ -41,14 +43,6 @@ export const ReportScreen = () => {
         strokeWidth: 3
       }
     ]
-  };
-
-  const formatMoney = (val: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      maximumFractionDigits: 0,
-    }).format(val);
   };
 
   const generatePDF = async () => {
@@ -82,15 +76,30 @@ export const ReportScreen = () => {
             <div class="section-title">Income & Tax Summary</div>
             <div class="row">
               <span class="label">Annual Gross Income</span>
-              <span class="value">${formatMoney(totalGrossNGN)}</span>
+              <span class="value">${formatMoney(totalGrossBase, baseCurrency)}</span>
+            </div>
+            ${taxResults.breakdown?.nationalInsurance ? `
+            <div class="row">
+              <span class="label">Income Tax</span>
+              <span class="value tax">${formatMoney(taxResults.breakdown.incomeTax, baseCurrency)}</span>
             </div>
             <div class="row">
-              <span class="label">Estimated Tax Liability (2026 Rules)</span>
-              <span class="value tax">${formatMoney(taxResults.tax)}</span>
+              <span class="label">National Insurance</span>
+              <span class="value tax">${formatMoney(taxResults.breakdown.nationalInsurance, baseCurrency)}</span>
             </div>
+            <div class="row">
+              <span class="label">Total Deductions</span>
+              <span class="value tax">${formatMoney(taxResults.tax, baseCurrency)}</span>
+            </div>
+            ` : `
+            <div class="row">
+              <span class="label">Estimated Tax Liability</span>
+              <span class="value tax">${formatMoney(taxResults.tax, baseCurrency)}</span>
+            </div>
+            `}
             <div class="row">
               <span class="label">Calculated Net Income</span>
-              <span class="value income">${formatMoney(taxResults.netIncome)}</span>
+              <span class="value income">${formatMoney(taxResults.netIncome, baseCurrency)}</span>
             </div>
           </div>
 
@@ -98,11 +107,11 @@ export const ReportScreen = () => {
             <div class="section-title">Compliance & Savings</div>
             <div class="row">
               <span class="label">Tax Savings Realized</span>
-              <span class="value income">${formatMoney(totalSaved)}</span>
+              <span class="value income">${formatMoney(totalSaved, baseCurrency)}</span>
             </div>
             <div class="row">
               <span class="label">Unfunded Tax Liability</span>
-              <span class="value tax">${formatMoney(Math.max(taxResults.tax - totalSaved, 0))}</span>
+              <span class="value tax">${formatMoney(Math.max(taxResults.tax - totalSaved, 0), baseCurrency)}</span>
             </div>
             <div class="row">
               <span class="label">Effective Tax Rate</span>
@@ -119,7 +128,7 @@ export const ReportScreen = () => {
 
     try {
       const { uri } = await Print.printToFileAsync({ html: htmlContent });
-      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+      await Print.printAsync({ uri });
     } catch (error) {
       setIsErrorVisible(true);
     }
@@ -149,10 +158,18 @@ export const ReportScreen = () => {
         style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
       >
         <Text style={[TYPOGRAPHY.h3, { color: colors.text, marginBottom: SIZES.large }]}>Yearly Summary</Text>
-        <SummaryItem label="Total Income" value={formatMoney(totalGrossNGN)} delay={200} />
-        <SummaryItem label="Estimated Tax" value={formatMoney(taxResults.tax)} color={colors.tax} delay={300} />
-        <SummaryItem label="Net Income" value={formatMoney(taxResults.netIncome)} color={colors.income} delay={400} />
-        <SummaryItem label="Tax Savings" value={formatMoney(totalSaved)} delay={500} />
+        <SummaryItem label="Total Income" value={formatMoney(totalGrossBase, baseCurrency)} delay={200} />
+        {taxResults.breakdown?.nationalInsurance ? (
+          <>
+            <SummaryItem label="Income Tax" value={formatMoney(taxResults.breakdown.incomeTax, baseCurrency)} color={colors.tax} delay={300} />
+            <SummaryItem label="National Insurance" value={formatMoney(taxResults.breakdown.nationalInsurance, baseCurrency)} color={colors.tax} delay={350} />
+            <SummaryItem label="Total Deductions" value={formatMoney(taxResults.tax, baseCurrency)} color={colors.tax} delay={380} />
+          </>
+        ) : (
+          <SummaryItem label="Estimated Tax" value={formatMoney(taxResults.tax, baseCurrency)} color={colors.tax} delay={300} />
+        )}
+        <SummaryItem label="Net Income" value={formatMoney(taxResults.netIncome, baseCurrency)} color={colors.income} delay={400} />
+        <SummaryItem label="Tax Savings" value={formatMoney(totalSaved, baseCurrency)} delay={500} />
       </MotiView>
 
       <MotiView
@@ -179,7 +196,7 @@ export const ReportScreen = () => {
           }}
           bezier
           style={styles.chart}
-          yAxisLabel="₦"
+          yAxisLabel={getCurrencySymbol(baseCurrency)}
           withInnerLines={true}
           withOuterLines={false}
           withVerticalLines={false}

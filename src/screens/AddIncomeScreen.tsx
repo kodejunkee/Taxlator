@@ -8,7 +8,7 @@ import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
 import { useAppContext } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { Currency } from '../types/income';
-import { convertToNGN } from '../utils/currencyConverter';
+import { convertToBaseCurrency } from '../utils/currencyConverter';
 import { getCurrencySymbol, formatInputAmount, parseFormattedAmount } from '../utils/formatters';
 
 import { CurrencySelector } from '../components/CurrencySelector';
@@ -22,9 +22,10 @@ export const AddIncomeScreen = () => {
   const { addIncome, settings, updateSettings } = useAppContext();
   const { colors } = useTheme();
 
+  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [currency, setCurrency] = useState<Currency>(settings.preferredCurrency || 'NGN');
+  const [currency, setCurrency] = useState<Currency>(settings.preferredCurrency || baseCurrency);
   const [isErrorVisible, setIsErrorVisible] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -42,13 +43,14 @@ export const AddIncomeScreen = () => {
       return;
     }
 
-    const amountNGN = convertToNGN(numAmount, currency, settings.exchangeRates);
+    const amountBase = convertToBaseCurrency(numAmount, currency, baseCurrency, settings.exchangeRates);
 
     addIncome({
       id: Date.now().toString(),
       amount: numAmount,
       currency,
-      amountNGN,
+      amountBase,
+      amountNGN: baseCurrency === 'NGN' ? amountBase : undefined, // legacy
       description: description.trim() || 'Income',
       date: new Date().toISOString(),
     });

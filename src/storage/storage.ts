@@ -10,12 +10,19 @@ export const defaultSettings: UserSettings = {
   preferredCurrency: 'NGN',
   exchangeRates: { USD: 1, NGN: 1500, GBP: 0.79, EUR: 0.92 },
   currencyUsage: {},
+  hasCompletedOnboarding: false,
+  country: '',
 };
 
 export const StorageService = {
   async getIncomes(): Promise<IncomeEntry[]> {
     const data = await AsyncStorage.getItem(INCOME_KEY);
-    return data ? JSON.parse(data) : [];
+    const parsed = data ? JSON.parse(data) : [];
+    // Migration mapping for legacy NGN entries
+    return parsed.map((item: any) => ({
+      ...item,
+      amountBase: item.amountBase ?? item.amountNGN ?? item.amount,
+    }));
   },
   async saveIncome(income: IncomeEntry) {
     const incomes = await this.getIncomes();

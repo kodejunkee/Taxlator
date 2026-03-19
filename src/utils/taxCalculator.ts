@@ -1,8 +1,13 @@
 export interface TaxCalculationResult {
   grossIncome: number;
-  tax: number;
+  tax: number; // For countries with multiple taxes, this represents total deductions.
   netIncome: number;
   effectiveTaxRate: number;
+  breakdown?: {
+    incomeTax: number;
+    nationalInsurance?: number;
+    // other secondary taxes can be added here
+  };
 }
 
 export function calculateNigeriaTax(incomeNGN: number): TaxCalculationResult {
@@ -54,5 +59,90 @@ export function calculateNigeriaTax(incomeNGN: number): TaxCalculationResult {
     tax: totalTax,
     netIncome,
     effectiveTaxRate,
+    breakdown: {
+      incomeTax: totalTax
+    }
   };
+}
+
+export function calculateUKTax(incomeGBP: number): TaxCalculationResult {
+  // 1. Calculate Personal Allowance with Tapering
+  let personalAllowance = 12570;
+  if (incomeGBP > 100000) {
+    const excess = incomeGBP - 100000;
+    const deduction = excess / 2;
+    personalAllowance = Math.max(0, personalAllowance - deduction);
+  }
+
+  // 2. Income Tax
+  let taxableIncome = Math.max(0, incomeGBP - personalAllowance);
+  let incomeTax = 0;
+
+  // Basic Rate (20% up to £37,700 taxable over allowance)
+  // Which corresponds to standard total income of £50,270 when full allowance is intact.
+  const basicRateLimit = 37700;
+  const higherRateLimit = 125140; // The threshold where additional rate begins (£125,140 absolute income)
+  
+  // Real taxable thresholds based on absolute income, but personal allowance changes
+  // Let's use the standard absolute thresholds adjusted by the standard allowance mapping, 
+  // ensuring the logic matches HMRC's method of applying bands to "taxable income".
+  
+  // Basic Rate: £0 to £37,700 of *taxable* income
+  const basicBand = Math.min(basicRateLimit, taxableIncome);
+  incomeTax += basicBand * 0.20;
+  taxableIncome -= basicBand;
+
+  // Higher Rate: £37,701 to £125,140 (Total income limit)
+  // Taxable income above £37,700 up to whatever leaves total income at £125,140
+  // Since we tapered allowance, the amount of taxable income in the higher band changes.
+  // The additional rate kicks in strictly when total income > £125,140.
+  if (taxableIncome > 0) {
+    const incomeSubjectToAdditional = Math.max(0, incomeGBP - higherRateLimit);
+    const basicAndAdditionalTotal = basicBand + incomeSubjectToAdditional;
+    // Higher band is simply whatever is left that isn't basic and isn't additional
+    const higherBand = Math.max(0, (incomeGBP - personalAllowance) - basicAndAdditionalTotal);
+    
+    incomeTax += higherBand * 0.40;
+    incomeTax += incomeSubjectToAdditional * 0.45;
+  }
+
+  // 3. National Insurance (Class 1) - using absolute income thresholds
+  let nationalInsurance = 0;
+  const niPrimaryThreshold = 12570;
+  const niUpperEarnings = 50270;
+
+  if (incomeGBP > niPrimaryThreshold) {
+    const mainRateEarnings = Math.min(incomeGBP, niUpperEarnings) - niPrimaryThreshold;
+    nationalInsurance += mainRateEarnings * 0.08; // 8% main rate
+
+    if (incomeGBP > niUpperEarnings) {
+      const upperRateEarnings = incomeGBP - niUpperEarnings;
+      nationalInsurance += upperRateEarnings * 0.02; // 2% upper rate
+    }
+  }
+
+  const totalDeductions = incomeTax + nationalInsurance;
+  const netIncome = incomeGBP - totalDeductions;
+  const effectiveTaxRate = incomeGBP > 0 ? (totalDeductions / incomeGBP) * 100 : 0;
+
+  return {
+    grossIncome: incomeGBP,
+    tax: totalDeductions,
+    netIncome,
+    effectiveTaxRate,
+    breakdown: {
+      incomeTax,
+      nationalInsurance
+    }
+  };
+}
+
+export function calculateTax(income: number, countryCode: string): TaxCalculationResult {
+  switch (countryCode) {
+    case 'UK':
+      return calculateUKTax(income);
+    case 'NG':
+    default:
+      return calculateNigeriaTax(income);
+  }
 }

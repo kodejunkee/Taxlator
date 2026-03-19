@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SIZES, TYPOGRAPHY, FONTS } from '../theme';
 import { useTheme } from '../context/ThemeContext';
 import { IncomeEntry, Currency } from '../types/income';
+import { formatMoney } from '../utils/formatters';
 
 interface Props {
   item: IncomeEntry;
@@ -13,14 +14,6 @@ interface Props {
 
 export const IncomeItem: React.FC<Props> = ({ item, preferredCurrency, exchangeRates }) => {
   const { colors } = useTheme();
-
-  const formatMoney = (val: number, curr: string) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: curr,
-      minimumFractionDigits: 0,
-    }).format(val);
-  };
 
   const amountPref = (() => {
     if (preferredCurrency === item.currency) return item.amount;

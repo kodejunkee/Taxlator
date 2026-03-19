@@ -4,6 +4,8 @@ import { MotiView } from 'moti';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SIZES, TYPOGRAPHY, SHADOWS } from '../theme';
 import { useTheme } from '../context/ThemeContext';
+import { useAppContext } from '../context/AppContext';
+import { formatMoney } from '../utils/formatters';
 
 interface Props {
   saved: number;
@@ -12,14 +14,8 @@ interface Props {
 
 export const TaxProgressBar: React.FC<Props> = ({ saved, target }) => {
   const { colors } = useTheme();
-
-  const formatMoney = (val: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
+  const { settings } = useAppContext();
+  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
 
   const percentage = target > 0 ? Math.min((saved / target) * 100, 100) : 0;
   const remaining = Math.max(target - saved, 0);
@@ -50,11 +46,11 @@ export const TaxProgressBar: React.FC<Props> = ({ saved, target }) => {
       <View style={styles.footer}>
         <View>
           <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary }]}>Saved</Text>
-          <Text style={[TYPOGRAPHY.bodyMedium, { color: colors.income, marginTop: 2 }]}>{formatMoney(saved)}</Text>
+          <Text style={[TYPOGRAPHY.bodyMedium, { color: colors.income, marginTop: 2 }]}>{formatMoney(saved, baseCurrency)}</Text>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
           <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary }]}>Remaining</Text>
-          <Text style={[TYPOGRAPHY.bodyMedium, { color: colors.tax, marginTop: 2 }]}>{formatMoney(remaining)}</Text>
+          <Text style={[TYPOGRAPHY.bodyMedium, { color: colors.tax, marginTop: 2 }]}>{formatMoney(remaining, baseCurrency)}</Text>
         </View>
       </View>
     </View>

@@ -5,18 +5,20 @@ import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
 import { useAppContext } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { Currency } from '../types/income';
-import { convertToNGN, convertFromNGN } from '../utils/currencyConverter';
-import { calculateNigeriaTax } from '../utils/taxCalculator';
+import { convertToBaseCurrency, convertFromBaseCurrency } from '../utils/currencyConverter';
+import { calculateTax } from '../utils/taxCalculator';
 import { CurrencySelector } from '../components/CurrencySelector';
 import { CurrencyModal } from '../components/CurrencyModal';
-import { getCurrencySymbol, formatInputAmount, parseFormattedAmount } from '../utils/formatters';
+import { getCurrencySymbol, formatInputAmount, parseFormattedAmount, formatMoney } from '../utils/formatters';
 
-const CURRENCIES: Currency[] = ['NGN', 'USD', 'GBP', 'EUR'];
+const CURRENCIES: Currency[] = ['NGN', 'USD', 'GBP', 'EUR', 'ZAR'];
 
 export const SalaryCalculatorScreen = () => {
   const { settings, updateSettings } = useAppContext();
   const { colors, isDark } = useTheme();
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>('NGN');
+
+  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>(settings.preferredCurrency || baseCurrency);
   const [salary, setSalary] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -28,25 +30,15 @@ export const SalaryCalculatorScreen = () => {
   };
   const numericSalary = parseFormattedAmount(salary);
 
-  const monthlySalaryNGN = convertToNGN(numericSalary, selectedCurrency, settings.exchangeRates);
-  const annualGrossNGN = monthlySalaryNGN * 12;
-  const taxResults = calculateNigeriaTax(annualGrossNGN);
-  const monthlyNetNGN = taxResults.netIncome / 12;
+  const monthlySalaryBase = convertToBaseCurrency(numericSalary, selectedCurrency, baseCurrency, settings.exchangeRates);
+  const annualGrossBase = monthlySalaryBase * 12;
+  const taxResults = calculateTax(annualGrossBase, settings.country);
+  const monthlyNetBase = taxResults.netIncome / 12;
 
-  const formatMoney = (val: number, cur: string) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: cur,
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
-
-  const ArtisticResult = ({ label, amountNGN, color = colors.text, delay = 0, isLarge = false }: any) => {
+  const ArtisticResult = ({ label, amountBase, color = colors.text, delay = 0, isLarge = false, subtext }: any) => {
     // Determine which currency to show as secondary
-    // If selected = naira, no secondary display. If selects dollar = secondary shows in dollar"
-    // This implies for THIS screen results, we follow the selected currency.
-    const secondaryCurrency = selectedCurrency !== 'NGN' ? selectedCurrency : null;
-    const amountSec = secondaryCurrency ? convertFromNGN(amountNGN, secondaryCurrency, settings.exchangeRates) : null;
+    const secondaryCurrency = selectedCurrency !== baseCurrency ? selectedCurrency : null;
+    const amountSec = secondaryCurrency ? convertFromBaseCurrency(amountBase, baseCurrency, secondaryCurrency, settings.exchangeRates) : null;
 
     return (
       <MotiView
@@ -61,13 +53,17 @@ export const SalaryCalculatorScreen = () => {
       >
         <Text style={[TYPOGRAPHY.label, { color: colors.textSecondary }]}>{label}</Text>
         <Text style={[isLarge ? TYPOGRAPHY.h1 : TYPOGRAPHY.h3, { color, marginTop: SIZES.tiny }]}>
-          {formatMoney(amountNGN, 'NGN')}
+          {formatMoney(amountBase, baseCurrency)}
         </Text>
-        {secondaryCurrency && (
+        {subtext ? (
+          <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, marginTop: 4 }]}>
+            {subtext}
+          </Text>
+        ) : secondaryCurrency ? (
           <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, marginTop: 4 }]}>
             {formatMoney(amountSec!, secondaryCurrency)}
           </Text>
-        )}
+        ) : null}
       </MotiView>
     );
   };
@@ -109,12 +105,18 @@ export const SalaryCalculatorScreen = () => {
         </View>
 
         <View style={styles.bentoGrid}>
-          <ArtisticResult label="Total Gross 2026" amountNGN={taxResults.grossIncome} delay={200} isLarge />
+          <ArtisticResult label="Total Gross Projected" amountBase={taxResults.grossIncome} delay={200} isLarge />
 
           <View style={styles.bentoRow}>
-            <ArtisticResult label="Est. Tax" amountNGN={taxResults.tax} color={colors.tax} delay={300} />
+            <ArtisticResult 
+              label={taxResults.breakdown?.nationalInsurance ? "Total Deductions" : "Est. Tax"} 
+              amountBase={taxResults.tax} 
+              color={colors.tax} 
+              delay={300} 
+              subtext={taxResults.breakdown?.nationalInsurance ? `Income Tax: ${formatMoney(taxResults.breakdown.incomeTax, baseCurrency)} • NI: ${formatMoney(taxResults.breakdown.nationalInsurance, baseCurrency)}` : undefined}
+            />
             <View style={{ width: SIZES.small }} />
-            <ArtisticResult label="Take Home" amountNGN={taxResults.netIncome} color={colors.income} delay={400} />
+            <ArtisticResult label="Take Home" amountBase={taxResults.netIncome} color={colors.income} delay={400} />
           </View>
         </View>
 
@@ -124,11 +126,17 @@ export const SalaryCalculatorScreen = () => {
         </View>
 
         <View style={styles.bentoRow}>
-          <ArtisticResult label="Gross" amountNGN={monthlySalaryNGN} delay={500} />
+          <ArtisticResult label="Gross" amountBase={monthlySalaryBase} delay={500} />
           <View style={{ width: SIZES.small }} />
-          <ArtisticResult label="Net" amountNGN={monthlyNetNGN} color={colors.income} delay={600} />
+          <ArtisticResult label="Net" amountBase={monthlyNetBase} color={colors.income} delay={600} />
         </View>
-        <ArtisticResult label="Tax" amountNGN={taxResults.tax / 12} color={colors.tax} delay={700} />
+        <ArtisticResult 
+          label={taxResults.breakdown?.nationalInsurance ? "Total Deductions" : "Tax"} 
+          amountBase={taxResults.tax / 12} 
+          color={colors.tax} 
+          delay={700} 
+          subtext={taxResults.breakdown?.nationalInsurance ? `Income Tax: ${formatMoney(taxResults.breakdown.incomeTax / 12, baseCurrency)} • NI: ${formatMoney(taxResults.breakdown.nationalInsurance / 12, baseCurrency)}` : undefined}
+        />
 
         <View style={{ height: 120 }} />
       </ScrollView>

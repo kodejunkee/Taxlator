@@ -9,8 +9,34 @@ export const getCurrencySymbol = (currency: Currency): string => {
     case 'GBP': return '£';
     case 'EUR': return '€';
     case 'NGN': return '₦';
+    case 'ZAR': return 'R';
     default: return '₦';
   }
+};
+
+/**
+ * Returns a standard locale for currency formatting.
+ */
+export const getCurrencyLocale = (currency: Currency): string => {
+  switch (currency) {
+    case 'USD': return 'en-US';
+    case 'GBP': return 'en-GB';
+    case 'EUR': return 'en-IE';
+    case 'NGN': return 'en-NG';
+    case 'ZAR': return 'en-ZA';
+    default: return 'en-US';
+  }
+};
+
+/**
+ * Global money formatter that adapts to the provided currency.
+ */
+export const formatMoney = (val: number, currency: Currency = 'NGN'): string => {
+  return new Intl.NumberFormat(getCurrencyLocale(currency), {
+    style: 'currency',
+    currency: currency,
+    maximumFractionDigits: 0,
+  }).format(val);
 };
 
 /**

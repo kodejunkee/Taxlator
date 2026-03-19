@@ -16,6 +16,14 @@ const THEMES: { label: string; value: ThemeMode; icon: any }[] = [
   { label: 'Dark', value: 'dark', icon: 'moon-outline' },
   { label: 'System', value: 'system', icon: 'settings-outline' }
 ];
+
+const COUNTRIES = [
+  { id: 'NG', name: 'Nigeria', currency: 'NGN', flag: '🇳🇬' },
+  { id: 'US', name: 'United States', currency: 'USD', flag: '🇺🇸' },
+  { id: 'UK', name: 'United Kingdom', currency: 'GBP', flag: '🇬🇧' },
+  { id: 'EU', name: 'European Union', currency: 'EUR', flag: '🇪🇺' },
+  { id: 'ZA', name: 'South Africa', currency: 'ZAR', flag: '🇿🇦' },
+];
 const ListSection = ({ title, description, children, delay = 0 }: any) => {
   const { colors } = useTheme();
   return (
@@ -62,15 +70,21 @@ const SettingItem = ({ icon, label, rightElement, onPress, isLast = false }: any
   return Content;
 };
 
-const RadioOption = ({ label, selected, onPress, isLast = false }: any) => {
+const RadioOption = ({ label, selected, onPress, isLast = false, disabled = false }: any) => {
   const { colors } = useTheme();
   return (
     <TouchableOpacity
-      onPress={onPress}
-      style={[styles.radioRow, !isLast && { borderBottomColor: colors.border, borderBottomWidth: 1 }]}
-      activeOpacity={0.7}
+      onPress={disabled ? undefined : onPress}
+      style={[
+        styles.radioRow, 
+        !isLast && { borderBottomColor: colors.border, borderBottomWidth: 1 },
+        disabled && { opacity: 0.4 }
+      ]}
+      activeOpacity={disabled ? 1 : 0.7}
     >
-      <Text style={[TYPOGRAPHY.body, { color: selected ? colors.text : colors.textSecondary }]}>{label}</Text>
+      <Text style={[TYPOGRAPHY.body, { color: selected ? colors.text : colors.textSecondary }]}>
+        {label}
+      </Text>
       <View style={[
         styles.radioOuter,
         { borderColor: selected ? colors.primary : colors.textSecondary }
@@ -82,7 +96,7 @@ const RadioOption = ({ label, selected, onPress, isLast = false }: any) => {
 };
 
 export const SettingsScreen = () => {
-  const { settings, refreshRates, isLoading } = useAppContext();
+  const { settings, refreshRates, isLoading, updateSettings } = useAppContext();
   const { colors, mode, setMode, isDark } = useTheme();
   const [alertConfig, setAlertConfig] = React.useState({
     visible: false,
@@ -117,6 +131,22 @@ export const SettingsScreen = () => {
         title: 'Sync Failed',
         message: 'Could not fetch latest rates. Please try again later.',
         isDestructive: true,
+      });
+    }
+  };
+
+  const handleChangeCountry = async (country: typeof COUNTRIES[0]) => {
+    if (settings.country !== country.id) {
+      await updateSettings({
+        country: country.id,
+        preferredCurrency: country.currency as Currency,
+      });
+      refreshRates(); // Refresh rates to ensure the new currency is up-to-date
+      setAlertConfig({
+        visible: true,
+        title: 'Region Updated',
+        message: `Your default currency is now set to ${country.currency}.`,
+        isDestructive: false,
       });
     }
   };
@@ -161,6 +191,22 @@ export const SettingsScreen = () => {
                 {value ? value.toFixed(2) : '---'}
               </Text>
             </View>
+          );
+        })}
+      </ListSection>
+
+      <ListSection title="Region & Baseline Currency" delay={300}>
+        {COUNTRIES.map((c, idx) => {
+          const isSupported = ['NG', 'UK'].includes(c.id);
+          return (
+            <RadioOption
+              key={c.id}
+              label={isSupported ? `${c.flag}  ${c.name} (${c.currency})` : `${c.flag}  ${c.name} (Coming Soon)`}
+              selected={settings.country === c.id}
+              onPress={() => handleChangeCountry(c)}
+              isLast={idx === COUNTRIES.length - 1}
+              disabled={!isSupported}
+            />
           );
         })}
       </ListSection>

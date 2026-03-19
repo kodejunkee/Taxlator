@@ -10,7 +10,7 @@ import { useAppContext } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { TaxSummaryCard } from '../components/TaxSummaryCard';
 import { ArtisticTile } from '../components/ArtisticTile';
-import { calculateNigeriaTax } from '../utils/taxCalculator';
+import { calculateTax } from '../utils/taxCalculator';
 
 const { width } = Dimensions.get('window');
 type CombinedNavProp = NativeStackNavigationProp<any> & BottomTabNavigationProp<any>;
@@ -20,10 +20,10 @@ export const HomeScreen = () => {
   const { incomes, savings, settings } = useAppContext();
   const { colors, isDark } = useTheme();
 
-  const totalGrossNGN = incomes.reduce((sum, item) => sum + item.amountNGN, 0);
-  const taxResults = calculateNigeriaTax(totalGrossNGN);
+  const totalGrossBase = incomes.reduce((sum, item) => sum + item.amountBase, 0);
+  const taxResults = calculateTax(totalGrossBase, settings.country);
   const totalSaved = savings.reduce((sum, item) => sum + item.amount, 0);
-  const netIncome = totalGrossNGN - taxResults.tax;
+  const netIncome = totalGrossBase - taxResults.tax;
 
 
   return (
@@ -55,7 +55,7 @@ export const HomeScreen = () => {
           <View style={styles.bentoLarge}>
             <TaxSummaryCard
               title="Gross Income"
-              amountNGN={totalGrossNGN}
+              amountBase={totalGrossBase}
               type="primary"
               delay={200}
               showChart
@@ -65,7 +65,7 @@ export const HomeScreen = () => {
           <View style={styles.bentoRow}>
             <TaxSummaryCard
               title="Est. Tax"
-              amountNGN={taxResults.tax}
+              amountBase={taxResults.tax}
               type="tax"
               delay={400}
               size="small"
@@ -73,7 +73,7 @@ export const HomeScreen = () => {
             <View style={{ width: SIZES.small }} />
             <TaxSummaryCard
               title="Net Income"
-              amountNGN={netIncome}
+              amountBase={netIncome}
               type="income"
               delay={500}
               size="small"

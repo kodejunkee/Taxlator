@@ -6,4 +6,6 @@ export interface UserSettings {
   preferredCurrency: Currency;
   exchangeRates: ExchangeRates;
   currencyUsage?: Record<string, number>;
+  hasCompletedOnboarding: boolean;
+  country: string;
 }

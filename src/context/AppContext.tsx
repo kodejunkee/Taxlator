@@ -53,9 +53,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateSettings = async (newSettingsPartial: Partial<UserSettings>) => {
-    const newSettings = { ...settings, ...newSettingsPartial };
-    await StorageService.saveSettings(newSettings);
-    setSettings(newSettings);
+    setSettings(prev => {
+      const newSettings = { ...prev, ...newSettingsPartial };
+      StorageService.saveSettings(newSettings);
+      return newSettings;
+    });
   };
 
   const refreshRates = async () => {

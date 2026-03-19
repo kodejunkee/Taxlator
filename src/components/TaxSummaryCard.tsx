@@ -7,11 +7,11 @@ import { useTheme } from '../context/ThemeContext';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import { Currency } from '../types/income';
 import { useAppContext } from '../context/AppContext';
-import { convertFromNGN } from '../utils/currencyConverter';
+import { convertFromBaseCurrency } from '../utils/currencyConverter';
 
 interface Props {
   title: string;
-  amountNGN: number;
+  amountBase: number;
   amountPreferred?: number;
   preferredCurrency?: Currency;
   type: 'neutral' | 'income' | 'tax' | 'primary';
@@ -22,7 +22,7 @@ interface Props {
 
 export const TaxSummaryCard: React.FC<Props> = ({
   title,
-  amountNGN,
+  amountBase,
   amountPreferred,
   preferredCurrency,
   type,
@@ -32,13 +32,14 @@ export const TaxSummaryCard: React.FC<Props> = ({
 }) => {
   const { colors, isDark } = useTheme();
   const { settings } = useAppContext();
+  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
 
   const activePreferred = preferredCurrency || settings.preferredCurrency;
-  const showSecondary = activePreferred && activePreferred !== 'NGN';
+  const showSecondary = activePreferred && activePreferred !== baseCurrency && activePreferred !== settings.country;
   
   const displayPreferredAmount = amountPreferred !== undefined 
     ? amountPreferred 
-    : (showSecondary ? convertFromNGN(amountNGN, activePreferred, settings.exchangeRates) : undefined);
+    : (showSecondary ? convertFromBaseCurrency(amountBase, baseCurrency, activePreferred, settings.exchangeRates) : undefined);
 
   let isLightText = false;
   let gradientColors: readonly [string, string, ...string[]] = [colors.card, colors.card];
@@ -83,7 +84,7 @@ export const TaxSummaryCard: React.FC<Props> = ({
           {title}
         </Text>
         <CurrencyDisplay 
-          amountNGN={amountNGN} 
+          amountBase={amountBase} 
           amountPreferred={displayPreferredAmount}
           preferredCurrency={showSecondary ? activePreferred : undefined}
           isNegative={false}

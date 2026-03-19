@@ -8,21 +8,24 @@ import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
 import { useAppContext } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { TaxProgressBar } from '../components/TaxProgressBar';
-import { calculateNigeriaTax } from '../utils/taxCalculator';
+import { calculateTax } from '../utils/taxCalculator';
+import { getCurrencySymbol } from '../utils/formatters';
 
 import { CustomAlert } from '../components/common/CustomAlert';
 
 export const AddTaxSavingsScreen = () => {
   const navigation = useNavigation();
-  const { incomes, savings, addSaving } = useAppContext();
+  const { incomes, savings, addSaving, settings } = useAppContext();
   const { colors } = useTheme();
   
   const [amount, setAmount] = useState('');
   const [isErrorVisible, setIsErrorVisible] = useState(false);
   const [isSuccessVisible, setIsSuccessVisible] = useState(false);
 
-  const totalGrossNGN = incomes.reduce((sum, item) => sum + item.amountNGN, 0);
-  const taxResults = calculateNigeriaTax(totalGrossNGN);
+  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
+  const currentSymbol = getCurrencySymbol(baseCurrency);
+  const totalGrossBase = incomes.reduce((sum, item) => sum + item.amountBase, 0);
+  const taxResults = calculateTax(totalGrossBase, settings.country);
   const totalSaved = savings.reduce((sum, item) => sum + item.amount, 0);
 
   const handleSave = () => {
@@ -63,10 +66,10 @@ export const AddTaxSavingsScreen = () => {
         style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
       >
         <Text style={[TYPOGRAPHY.label, { color: colors.textSecondary, marginBottom: SIZES.small }]}>
-          Savings Amount (NGN)
+          Savings Amount ({baseCurrency})
         </Text>
         <View style={[styles.inputContainer, { borderBottomColor: colors.border }]}>
-          <Text style={[styles.currencySymbol, { color: colors.text }]}>₦</Text>
+          <Text style={[styles.currencySymbol, { color: colors.text }]}>{currentSymbol}</Text>
           <TextInput
             style={[styles.input, { color: colors.text }]}
             keyboardType="numeric"

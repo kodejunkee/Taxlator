@@ -10,8 +10,9 @@ import { useAppContext } from '../context/AppContext';
 import { useTheme } from '../context/ThemeContext';
 import { IncomeItem } from '../components/IncomeItem';
 import { TaxSummaryCard } from '../components/TaxSummaryCard';
-import { calculateNigeriaTax } from '../utils/taxCalculator';
-import { convertFromNGN } from '../utils/currencyConverter';
+import { calculateTax } from '../utils/taxCalculator';
+import { convertFromBaseCurrency } from '../utils/currencyConverter';
+import { formatMoney } from '../utils/formatters';
 
 import { CustomAlert } from '../components/common/CustomAlert';
 
@@ -23,17 +24,10 @@ export const IncomeTrackerScreen = () => {
   const { colors, isDark } = useTheme();
   const [isResetAlertVisible, setIsResetAlertVisible] = React.useState(false);
 
-  const totalGrossNGN = incomes.reduce((sum, item) => sum + item.amountNGN, 0);
-  const taxResults = calculateNigeriaTax(totalGrossNGN);
-  const netIncome = totalGrossNGN - taxResults.tax;
-
-  const formatMoney = (val: number, cur: string) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: cur,
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
+  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
+  const totalGrossBase = incomes.reduce((sum, item) => sum + item.amountBase, 0);
+  const taxResults = calculateTax(totalGrossBase, settings.country);
+  const netIncome = totalGrossBase - taxResults.tax;
 
   const handleReset = () => {
     setIsResetAlertVisible(true);
@@ -59,11 +53,11 @@ export const IncomeTrackerScreen = () => {
         >
           <Text style={[TYPOGRAPHY.label, { color: colors.accent, marginBottom: SIZES.tiny }]}>Cumulative Annual Gross</Text>
           <Text style={[TYPOGRAPHY.h1, { color: colors.text, fontSize: 42 }]}>
-            {formatMoney(totalGrossNGN, 'NGN')}
+            {formatMoney(totalGrossBase, baseCurrency)}
           </Text>
-          {settings.preferredCurrency !== 'NGN' && (
+          {settings.preferredCurrency !== baseCurrency && (
             <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, marginTop: 4 }]}>
-              ≈ {formatMoney(convertFromNGN(totalGrossNGN, settings.preferredCurrency, settings.exchangeRates), settings.preferredCurrency)}
+              ≈ {formatMoney(convertFromBaseCurrency(totalGrossBase, baseCurrency, settings.preferredCurrency, settings.exchangeRates), settings.preferredCurrency)}
             </Text>
           )}
         </MotiView>
@@ -72,7 +66,7 @@ export const IncomeTrackerScreen = () => {
       <View style={styles.metricsRow}>
         <TaxSummaryCard
           title="Est. Tax"
-          amountNGN={taxResults.tax}
+          amountBase={taxResults.tax}
           type="tax"
           delay={200}
           size="small"
@@ -80,7 +74,7 @@ export const IncomeTrackerScreen = () => {
         <View style={{ width: SIZES.small }} />
         <TaxSummaryCard
           title="Net Income"
-          amountNGN={netIncome}
+          amountBase={netIncome}
           type="income"
           delay={300}
           size="small"

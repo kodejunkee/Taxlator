@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { useAppContext } from '../context/AppContext';
 import { Currency } from '../types/income';
+import { formatMoney } from '../utils/formatters';
 
 interface Props {
-  amountNGN: number;
+  amountBase: number;
   amountPreferred?: number;
   preferredCurrency?: Currency;
   isNegative?: boolean;
@@ -13,7 +15,7 @@ interface Props {
 }
 
 export const CurrencyDisplay: React.FC<Props> = ({
-  amountNGN,
+  amountBase,
   amountPreferred,
   preferredCurrency,
   isNegative = false,
@@ -21,21 +23,15 @@ export const CurrencyDisplay: React.FC<Props> = ({
   textStyle,
 }) => {
   const { colors } = useTheme();
-
-  const formatMoney = (val: number, curr: string) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: curr,
-      minimumFractionDigits: 0,
-    }).format(val);
-  };
+  const { settings } = useAppContext();
+  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
 
   const defaultColor = isNegative ? colors.tax : colors.text;
 
   return (
     <View style={[styles.container, style]}>
       <Text style={[styles.mainAmount, { color: defaultColor }, textStyle]}>
-        {formatMoney(amountNGN, 'NGN')}
+        {formatMoney(amountBase, baseCurrency)}
       </Text>
       {preferredCurrency && preferredCurrency !== 'NGN' && amountPreferred !== undefined && (
         <Text style={[styles.subAmount, { color: colors.textSecondary }, textStyle]}>

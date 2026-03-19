@@ -14,9 +14,14 @@ import {
   AddIncomeScreen,
   AddTaxSavingsScreen,
   ReportScreen,
+  OnboardingScreen,
+  CountrySelectorScreen,
 } from '../screens';
+import { useAppContext } from '../context/AppContext';
 
 export type RootStackParamList = {
+  Onboarding: undefined;
+  CountrySelector: undefined;
   MainTabs: undefined;
   AddIncome: undefined;
   AddTaxSavings: undefined;
@@ -60,6 +65,9 @@ function MainTabs() {
 
 export function AppNavigator() {
   const { isDark, colors } = useTheme();
+  const { settings, isLoading } = useAppContext();
+
+  if (isLoading) return null;
 
   // Create a custom React Navigation theme that matches our dark/light mode context exactly
   const AppNavTheme = {
@@ -83,28 +91,37 @@ export function AppNavigator() {
           headerShadowVisible: false,
         }}
       >
-        <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="AddIncome" 
-          component={AddIncomeScreen} 
-          options={({ navigation }) => ({ 
-            header: () => <PremiumHeader title="Add Income" onBack={() => navigation.goBack()} /> 
-          })} 
-        />
-        <Stack.Screen 
-          name="AddTaxSavings" 
-          component={AddTaxSavingsScreen} 
-          options={({ navigation }) => ({ 
-            header: () => <PremiumHeader title="Add Tax Savings" onBack={() => navigation.goBack()} /> 
-          })} 
-        />
-        <Stack.Screen 
-          name="Report" 
-          component={ReportScreen} 
-          options={({ navigation }) => ({ 
-            header: () => <PremiumHeader title="Yearly Report" onBack={() => navigation.goBack()} /> 
-          })} 
-        />
+        {!settings.hasCompletedOnboarding ? (
+          <Stack.Group screenOptions={{ headerShown: false, animation: 'fade' }}>
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+            <Stack.Screen name="CountrySelector" component={CountrySelectorScreen} />
+          </Stack.Group>
+        ) : (
+          <Stack.Group>
+            <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+            <Stack.Screen 
+              name="AddIncome" 
+              component={AddIncomeScreen} 
+              options={({ navigation }) => ({ 
+                header: () => <PremiumHeader title="Add Income" onBack={() => navigation.goBack()} /> 
+              })} 
+            />
+            <Stack.Screen 
+              name="AddTaxSavings" 
+              component={AddTaxSavingsScreen} 
+              options={({ navigation }) => ({ 
+                header: () => <PremiumHeader title="Add Tax Savings" onBack={() => navigation.goBack()} /> 
+              })} 
+            />
+            <Stack.Screen 
+              name="Report" 
+              component={ReportScreen} 
+              options={({ navigation }) => ({ 
+                header: () => <PremiumHeader title="Yearly Report" onBack={() => navigation.goBack()} /> 
+              })} 
+            />
+          </Stack.Group>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );
