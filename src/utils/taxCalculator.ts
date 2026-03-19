@@ -137,10 +137,53 @@ export function calculateUKTax(incomeGBP: number): TaxCalculationResult {
   };
 }
 
+export function calculateSGTax(incomeSGD: number): TaxCalculationResult {
+  let remainingIncome = incomeSGD;
+  let totalTax = 0;
+
+  const bands = [
+    { limit: 20000, rate: 0 },
+    { limit: 10000, rate: 0.02 },
+    { limit: 10000, rate: 0.035 },
+    { limit: 40000, rate: 0.07 },
+    { limit: 40000, rate: 0.115 },
+    { limit: 40000, rate: 0.15 },
+    { limit: 40000, rate: 0.18 },
+    { limit: 40000, rate: 0.19 },
+    { limit: 40000, rate: 0.195 },
+    { limit: 40000, rate: 0.20 },
+    { limit: 180000, rate: 0.22 },
+    { limit: 500000, rate: 0.23 },
+    { limit: Infinity, rate: 0.24 }
+  ];
+
+  for (const band of bands) {
+    if (remainingIncome <= 0) break;
+    const taxableInThisBand = Math.min(band.limit, remainingIncome);
+    totalTax += taxableInThisBand * band.rate;
+    remainingIncome -= taxableInThisBand;
+  }
+
+  const netIncome = incomeSGD - totalTax;
+  const effectiveTaxRate = incomeSGD > 0 ? (totalTax / incomeSGD) * 100 : 0;
+
+  return {
+    grossIncome: incomeSGD,
+    tax: totalTax,
+    netIncome,
+    effectiveTaxRate,
+    breakdown: {
+      incomeTax: totalTax
+    }
+  };
+}
+
 export function calculateTax(income: number, countryCode: string): TaxCalculationResult {
   switch (countryCode) {
     case 'UK':
       return calculateUKTax(income);
+    case 'SG':
+      return calculateSGTax(income);
     case 'NG':
     default:
       return calculateNigeriaTax(income);

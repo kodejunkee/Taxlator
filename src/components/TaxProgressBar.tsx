@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SIZES, TYPOGRAPHY, SHADOWS } from '../theme';
 import { useTheme } from '../context/ThemeContext';
 import { useAppContext } from '../context/AppContext';
+import { getBaseCurrency } from '../utils/countryData';
 import { formatMoney } from '../utils/formatters';
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 export const TaxProgressBar: React.FC<Props> = ({ saved, target }) => {
   const { colors } = useTheme();
   const { settings } = useAppContext();
-  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
+  const baseCurrency = getBaseCurrency(settings.country);
 
   const percentage = target > 0 ? Math.min((saved / target) * 100, 100) : 0;
   const remaining = Math.max(target - saved, 0);

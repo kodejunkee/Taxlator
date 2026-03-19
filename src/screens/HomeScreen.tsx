@@ -11,6 +11,8 @@ import { useTheme } from '../context/ThemeContext';
 import { TaxSummaryCard } from '../components/TaxSummaryCard';
 import { ArtisticTile } from '../components/ArtisticTile';
 import { calculateTax } from '../utils/taxCalculator';
+import { getBaseCurrency } from '../utils/countryData';
+import { convertToBaseCurrency } from '../utils/currencyConverter';
 
 const { width } = Dimensions.get('window');
 type CombinedNavProp = NativeStackNavigationProp<any> & BottomTabNavigationProp<any>;
@@ -20,7 +22,8 @@ export const HomeScreen = () => {
   const { incomes, savings, settings } = useAppContext();
   const { colors, isDark } = useTheme();
 
-  const totalGrossBase = incomes.reduce((sum, item) => sum + item.amountBase, 0);
+  const baseCurrency = getBaseCurrency(settings.country);
+  const totalGrossBase = incomes.reduce((sum, item) => sum + convertToBaseCurrency(item.amount, item.currency, baseCurrency, settings.exchangeRates), 0);
   const taxResults = calculateTax(totalGrossBase, settings.country);
   const totalSaved = savings.reduce((sum, item) => sum + item.amount, 0);
   const netIncome = totalGrossBase - taxResults.tax;

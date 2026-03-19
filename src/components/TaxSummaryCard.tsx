@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import { Currency } from '../types/income';
 import { useAppContext } from '../context/AppContext';
+import { getBaseCurrency } from '../utils/countryData';
 import { convertFromBaseCurrency } from '../utils/currencyConverter';
 
 interface Props {
@@ -32,7 +33,7 @@ export const TaxSummaryCard: React.FC<Props> = ({
 }) => {
   const { colors, isDark } = useTheme();
   const { settings } = useAppContext();
-  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
+  const baseCurrency = getBaseCurrency(settings.country);
 
   const activePreferred = preferredCurrency || settings.preferredCurrency;
   const showSecondary = activePreferred && activePreferred !== baseCurrency && activePreferred !== settings.country;

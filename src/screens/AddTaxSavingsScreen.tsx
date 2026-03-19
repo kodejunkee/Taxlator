@@ -6,9 +6,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
 import { useAppContext } from '../context/AppContext';
+import { getBaseCurrency } from '../utils/countryData';
 import { useTheme } from '../context/ThemeContext';
 import { TaxProgressBar } from '../components/TaxProgressBar';
 import { calculateTax } from '../utils/taxCalculator';
+import { convertToBaseCurrency } from '../utils/currencyConverter';
 import { getCurrencySymbol } from '../utils/formatters';
 
 import { CustomAlert } from '../components/common/CustomAlert';
@@ -22,9 +24,9 @@ export const AddTaxSavingsScreen = () => {
   const [isErrorVisible, setIsErrorVisible] = useState(false);
   const [isSuccessVisible, setIsSuccessVisible] = useState(false);
 
-  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
+  const baseCurrency = getBaseCurrency(settings.country);
   const currentSymbol = getCurrencySymbol(baseCurrency);
-  const totalGrossBase = incomes.reduce((sum, item) => sum + item.amountBase, 0);
+  const totalGrossBase = incomes.reduce((sum, item) => sum + convertToBaseCurrency(item.amount, item.currency, baseCurrency, settings.exchangeRates), 0);
   const taxResults = calculateTax(totalGrossBase, settings.country);
   const totalSaved = savings.reduce((sum, item) => sum + item.amount, 0);
 

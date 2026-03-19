@@ -8,9 +8,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
 import { useAppContext } from '../context/AppContext';
+import { getBaseCurrency } from '../utils/countryData';
 import { useTheme } from '../context/ThemeContext';
 import { calculateTax } from '../utils/taxCalculator';
 import { formatMoney, getCurrencySymbol } from '../utils/formatters';
+import { convertToBaseCurrency } from '../utils/currencyConverter';
 
 import { CustomAlert } from '../components/common/CustomAlert';
 
@@ -21,8 +23,8 @@ export const ReportScreen = () => {
   const { colors, isDark } = useTheme();
   const [isErrorVisible, setIsErrorVisible] = React.useState(false);
 
-  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
-  const totalGrossBase = incomes.reduce((sum, item) => sum + item.amountBase, 0);
+  const baseCurrency = getBaseCurrency(settings.country);
+  const totalGrossBase = incomes.reduce((sum, item) => sum + convertToBaseCurrency(item.amount, item.currency, baseCurrency, settings.exchangeRates), 0);
   const taxResults = calculateTax(totalGrossBase, settings.country);
   const totalSaved = savings.reduce((sum, item) => sum + item.amount, 0);
 
@@ -31,7 +33,7 @@ export const ReportScreen = () => {
   incomes.forEach(income => {
     const date = new Date(income.date);
     const month = date.getMonth(); // 0 - 11
-    monthlyData[month] += income.amountBase;
+    monthlyData[month] += convertToBaseCurrency(income.amount, income.currency, baseCurrency, settings.exchangeRates);
   });
 
   const chartData = {
@@ -102,6 +104,11 @@ export const ReportScreen = () => {
               <span class="value income">${formatMoney(taxResults.netIncome, baseCurrency)}</span>
             </div>
           </div>
+          ${settings.country === 'SG' ? `
+          <div style="font-size: 11px; color: #9ca3af; text-align: center; margin-top: -15px; margin-bottom: 25px;">
+            * Calculations reflect Singapore Resident Individual Baseline Bracket (YA 2024)
+          </div>
+          ` : ''}
 
           <div class="summary-card">
             <div class="section-title">Compliance & Savings</div>

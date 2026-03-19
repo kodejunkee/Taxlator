@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useAppContext } from '../context/AppContext';
+import { getBaseCurrency } from '../utils/countryData';
 import { Currency } from '../types/income';
 import { formatMoney } from '../utils/formatters';
 
@@ -24,7 +25,7 @@ export const CurrencyDisplay: React.FC<Props> = ({
 }) => {
   const { colors } = useTheme();
   const { settings } = useAppContext();
-  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
+  const baseCurrency = getBaseCurrency(settings.country);
 
   const defaultColor = isNegative ? colors.tax : colors.text;
 

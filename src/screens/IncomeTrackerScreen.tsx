@@ -7,11 +7,12 @@ import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { SIZES, SHADOWS, TYPOGRAPHY } from '../theme';
 import { useAppContext } from '../context/AppContext';
+import { getBaseCurrency } from '../utils/countryData';
 import { useTheme } from '../context/ThemeContext';
 import { IncomeItem } from '../components/IncomeItem';
 import { TaxSummaryCard } from '../components/TaxSummaryCard';
 import { calculateTax } from '../utils/taxCalculator';
-import { convertFromBaseCurrency } from '../utils/currencyConverter';
+import { convertFromBaseCurrency, convertToBaseCurrency } from '../utils/currencyConverter';
 import { formatMoney } from '../utils/formatters';
 
 import { CustomAlert } from '../components/common/CustomAlert';
@@ -24,8 +25,8 @@ export const IncomeTrackerScreen = () => {
   const { colors, isDark } = useTheme();
   const [isResetAlertVisible, setIsResetAlertVisible] = React.useState(false);
 
-  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
-  const totalGrossBase = incomes.reduce((sum, item) => sum + item.amountBase, 0);
+  const baseCurrency = getBaseCurrency(settings.country);
+  const totalGrossBase = incomes.reduce((sum, item) => sum + convertToBaseCurrency(item.amount, item.currency, baseCurrency, settings.exchangeRates), 0);
   const taxResults = calculateTax(totalGrossBase, settings.country);
   const netIncome = totalGrossBase - taxResults.tax;
 

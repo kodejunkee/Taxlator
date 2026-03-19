@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from 
 import { MotiView } from 'moti';
 import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
 import { useAppContext } from '../context/AppContext';
+import { getBaseCurrency } from '../utils/countryData';
 import { useTheme } from '../context/ThemeContext';
 import { Currency } from '../types/income';
 import { convertToBaseCurrency, convertFromBaseCurrency } from '../utils/currencyConverter';
@@ -17,7 +18,7 @@ export const SalaryCalculatorScreen = () => {
   const { settings, updateSettings } = useAppContext();
   const { colors, isDark } = useTheme();
 
-  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
+  const baseCurrency = getBaseCurrency(settings.country);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(settings.preferredCurrency || baseCurrency);
   const [salary, setSalary] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -97,6 +98,11 @@ export const SalaryCalculatorScreen = () => {
               onChangeText={(text) => setSalary(formatInputAmount(text))}
             />
           </View>
+          {settings.country === 'SG' && (
+            <Text style={[TYPOGRAPHY.caption, { color: colors.textSecondary, marginTop: SIZES.small }]}>
+              * Tax Profile: Resident Individual (YA 2024)
+            </Text>
+          )}
         </MotiView>
 
         <View style={styles.sectionHeader}>

@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SIZES, SHADOWS, TYPOGRAPHY, FONTS } from '../theme';
 import { useAppContext } from '../context/AppContext';
+import { getBaseCurrency } from '../utils/countryData';
 import { useTheme } from '../context/ThemeContext';
 import { Currency } from '../types/income';
 import { convertToBaseCurrency } from '../utils/currencyConverter';
@@ -22,7 +23,7 @@ export const AddIncomeScreen = () => {
   const { addIncome, settings, updateSettings } = useAppContext();
   const { colors } = useTheme();
 
-  const baseCurrency = settings.country === 'UK' ? 'GBP' : 'NGN';
+  const baseCurrency = getBaseCurrency(settings.country);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [currency, setCurrency] = useState<Currency>(settings.preferredCurrency || baseCurrency);

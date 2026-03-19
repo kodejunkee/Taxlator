@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Switch, Image } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Switch, Image, Modal, KeyboardAvoidingView, Platform, TextInput, SafeAreaView } from 'react-native';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import NetInfo from '@react-native-community/netinfo';
@@ -17,13 +17,8 @@ const THEMES: { label: string; value: ThemeMode; icon: any }[] = [
   { label: 'System', value: 'system', icon: 'settings-outline' }
 ];
 
-const COUNTRIES = [
-  { id: 'NG', name: 'Nigeria', currency: 'NGN', flag: '🇳🇬' },
-  { id: 'US', name: 'United States', currency: 'USD', flag: '🇺🇸' },
-  { id: 'UK', name: 'United Kingdom', currency: 'GBP', flag: '🇬🇧' },
-  { id: 'EU', name: 'European Union', currency: 'EUR', flag: '🇪🇺' },
-  { id: 'ZA', name: 'South Africa', currency: 'ZAR', flag: '🇿🇦' },
-];
+import { COUNTRIES } from '../utils/countryData';
+
 const ListSection = ({ title, description, children, delay = 0 }: any) => {
   const { colors } = useTheme();
   return (
@@ -104,6 +99,14 @@ export const SettingsScreen = () => {
     message: '',
     isDestructive: false,
   });
+  const [isCountryModalVisible, setIsCountryModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredCountries = useMemo(() => {
+    if (!searchQuery) return COUNTRIES;
+    const q = searchQuery.toLowerCase();
+    return COUNTRIES.filter(c => c.name.toLowerCase().includes(q) || c.currency.toLowerCase().includes(q));
+  }, [searchQuery]);
 
   const handleRefreshRates = async () => {
     const netInfo = await NetInfo.fetch();
@@ -196,19 +199,20 @@ export const SettingsScreen = () => {
       </ListSection>
 
       <ListSection title="Region & Baseline Currency" delay={300}>
-        {COUNTRIES.map((c, idx) => {
-          const isSupported = ['NG', 'UK'].includes(c.id);
-          return (
-            <RadioOption
-              key={c.id}
-              label={isSupported ? `${c.flag}  ${c.name} (${c.currency})` : `${c.flag}  ${c.name} (Coming Soon)`}
-              selected={settings.country === c.id}
-              onPress={() => handleChangeCountry(c)}
-              isLast={idx === COUNTRIES.length - 1}
-              disabled={!isSupported}
-            />
-          );
-        })}
+        <SettingItem
+          icon="earth-outline"
+          label="Country"
+          rightElement={
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={[TYPOGRAPHY.bodyMedium, { color: colors.textSecondary, marginRight: 8 }]}>
+                {COUNTRIES.find(c => c.id === settings.country)?.name || 'Select'}
+              </Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+            </View>
+          }
+          onPress={() => setIsCountryModalVisible(true)}
+          isLast={true}
+        />
       </ListSection>
 
       <ListSection title="Appearance" delay={400}>
@@ -238,6 +242,63 @@ export const SettingsScreen = () => {
         confirmText="Got it"
         onConfirm={() => setAlertConfig(prev => ({ ...prev, visible: false }))}
       />
+
+      <Modal
+        visible={isCountryModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsCountryModalVisible(false)}
+      >
+        <KeyboardAvoidingView 
+          style={styles.modalOverlay}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalOverlayInner}>
+            <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+              <SafeAreaView style={styles.safeArea}>
+                <View style={styles.modalHeader}>
+                  <Text style={[TYPOGRAPHY.h3, { color: colors.text }]}>Select Region</Text>
+                  <TouchableOpacity onPress={() => { setIsCountryModalVisible(false); setSearchQuery(''); }} style={styles.closeBtn}>
+                    <Ionicons name="close" size={24} color={colors.text} />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={[styles.searchContainer, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }]}>
+                  <Ionicons name="search" size={20} color={colors.textSecondary} />
+                  <TextInput
+                    style={[styles.searchInput, { color: colors.text }]}
+                    placeholder="Search region or currency..."
+                    placeholderTextColor={colors.textSecondary}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    autoCorrect={false}
+                  />
+                </View>
+
+                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.modalListContent}>
+                  {filteredCountries.map((c, idx) => {
+                    const isSupported = ['NG', 'UK', 'SG'].includes(c.id);
+                    return (
+                      <RadioOption
+                        key={c.id}
+                        label={isSupported ? `${c.flag}  ${c.name} (${c.currency})` : `${c.flag}  ${c.name} (Coming Soon)`}
+                        selected={settings.country === c.id}
+                        onPress={() => {
+                          handleChangeCountry(c);
+                          setIsCountryModalVisible(false);
+                          setSearchQuery('');
+                        }}
+                        isLast={idx === filteredCountries.length - 1}
+                        disabled={!isSupported}
+                      />
+                    );
+                  })}
+                </ScrollView>
+              </SafeAreaView>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </ScrollView>
   );
 };
@@ -321,5 +382,51 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: SIZES.xxlarge,
   },
+  modalOverlay: {
+    flex: 1,
+  },
+  modalOverlayInner: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    height: 500,
+    maxHeight: '100%',
+    flexShrink: 1,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    ...SHADOWS.elevated,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: SIZES.large,
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: SIZES.large,
+    paddingHorizontal: SIZES.medium,
+    borderRadius: 16,
+    height: 50,
+    marginBottom: SIZES.medium,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: SIZES.small,
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+  },
+  modalListContent: {
+    paddingHorizontal: SIZES.large,
+    paddingBottom: 40,
+  },
 });
-

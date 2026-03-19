@@ -1,33 +1,26 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MotiView } from 'moti';
-import { SIZES, TYPOGRAPHY, SHADOWS } from '../theme';
+import { SIZES, TYPOGRAPHY, SHADOWS, FONTS } from '../theme';
 import { useTheme } from '../context/ThemeContext';
 import { useAppContext } from '../context/AppContext';
 import { Currency } from '../types/income';
 
-interface CountryOption {
-  id: string;
-  name: string;
-  currency: Currency;
-  flag: string;
-  isSupported?: boolean;
-}
-
-const COUNTRIES: CountryOption[] = [
-  { id: 'NG', name: 'Nigeria', currency: 'NGN', flag: '🇳🇬', isSupported: true },
-  { id: 'US', name: 'United States', currency: 'USD', flag: '🇺🇸', isSupported: false },
-  { id: 'UK', name: 'United Kingdom', currency: 'GBP', flag: '🇬🇧', isSupported: true },
-  { id: 'EU', name: 'European Union', currency: 'EUR', flag: '🇪🇺', isSupported: false },
-  { id: 'ZA', name: 'South Africa', currency: 'ZAR', flag: '🇿🇦', isSupported: false },
-];
+import { COUNTRIES, CountryOption } from '../utils/countryData';
 
 export const CountrySelectorScreen = () => {
   const { colors, isDark } = useTheme();
   const { updateSettings } = useAppContext();
   const [selectedCountry, setSelectedCountry] = useState<CountryOption | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredCountries = useMemo(() => {
+    if (!searchQuery) return COUNTRIES;
+    const q = searchQuery.toLowerCase();
+    return COUNTRIES.filter(c => c.name.toLowerCase().includes(q) || c.currency.toLowerCase().includes(q));
+  }, [searchQuery]);
 
   const handleComplete = async () => {
     if (selectedCountry) {
@@ -63,49 +56,69 @@ export const CountrySelectorScreen = () => {
         </MotiView>
       </View>
 
+      <View style={{ paddingHorizontal: SIZES.large, marginBottom: SIZES.medium }}>
+        <View style={[styles.searchContainer, { backgroundColor: isDark ? '#1E293B' : '#F1F5F9' }]}>
+          <Ionicons name="search" size={20} color={colors.textSecondary} />
+          <TextInput 
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search country or currency..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCorrect={false}
+          />
+        </View>
+      </View>
+
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        {COUNTRIES.map((country, index) => {
-          const isSelected = selectedCountry?.id === country.id;
-          const isSupported = country.isSupported !== false;
-          return (
-            <MotiView
-              key={country.id}
-              from={{ opacity: 0, translateY: 20 }}
-              animate={{ opacity: 1, translateY: 0 }}
-              transition={{ delay: 100 + index * 100 }}
-            >
-              <TouchableOpacity
-                activeOpacity={isSupported ? 0.7 : 1}
-                onPress={isSupported ? () => setSelectedCountry(country) : undefined}
-                style={[
-                  styles.countryCard,
-                  { backgroundColor: colors.card, borderColor: isSelected ? colors.primary : colors.border },
-                  isSelected && SHADOWS.glow,
-                  !isSupported && { opacity: 0.5 }
-                ]}
+        <View style={styles.gridContainer}>
+          {filteredCountries.map((country, index) => {
+            const isSelected = selectedCountry?.id === country.id;
+            const isSupported = country.isSupported !== false;
+            return (
+              <MotiView
+                key={country.id}
+                from={{ opacity: 0, translateY: 20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                transition={{ delay: 10 + Math.min(index * 50, 500) }}
+                style={{ width: '48%' }}
               >
-                <View style={styles.countryInfo}>
-                  <Text style={[styles.flag, { fontSize: 24 }]}>{country.flag}</Text>
-                  <View>
-                    <Text style={[TYPOGRAPHY.bodyBold, { color: colors.text }]}>
-                      {country.name} {!isSupported && <Text style={{ fontSize: 13, color: colors.textSecondary, fontWeight: 'normal' }}>(Coming Soon)</Text>}
-                    </Text>
-                    <Text style={[TYPOGRAPHY.label, { color: colors.textSecondary }]}>{country.currency}</Text>
+                <TouchableOpacity
+                  activeOpacity={isSupported ? 0.7 : 1}
+                  onPress={isSupported ? () => setSelectedCountry(country) : undefined}
+                  style={[
+                    styles.countryCard,
+                    { backgroundColor: colors.card, borderColor: isSelected ? colors.primary : colors.border },
+                    isSelected && SHADOWS.glow,
+                    !isSupported && { opacity: 0.5 }
+                  ]}
+                >
+                  <View style={styles.countryInfo}>
+                    <Text style={[styles.flag, { fontSize: 32 }]}>{country.flag}</Text>
+                    <View style={{ alignItems: 'center' }}>
+                      <Text style={[TYPOGRAPHY.bodyBold, { color: colors.text, textAlign: 'center' }]}>
+                        {country.name}
+                      </Text>
+                      <Text style={[TYPOGRAPHY.label, { color: colors.textSecondary }]}>{country.currency}</Text>
+                      {!isSupported && (
+                        <Text style={{ fontSize: 11, color: colors.textSecondary, marginTop: 4 }}>(Coming Soon)</Text>
+                      )}
+                    </View>
                   </View>
-                </View>
-                
-                <View style={[
-                  styles.radioBtn,
-                  { borderColor: isSelected ? colors.primary : colors.border },
-                  isSelected && { backgroundColor: `${colors.primary}20` },
-                  !isSupported && { opacity: 0.3 }
-                ]}>
-                  {isSelected && <Ionicons name="checkmark-sharp" size={14} color={colors.primary} />}
-                </View>
-              </TouchableOpacity>
-            </MotiView>
-          );
-        })}
+                  
+                  <View style={[
+                    styles.radioBtn,
+                    { borderColor: isSelected ? colors.primary : colors.border },
+                    isSelected && { backgroundColor: `${colors.primary}20` },
+                    !isSupported && { opacity: 0.3 }
+                  ]}>
+                    {isSelected && <Ionicons name="checkmark-sharp" size={14} color={colors.primary} />}
+                  </View>
+                </TouchableOpacity>
+              </MotiView>
+            );
+          })}
+        </View>
       </ScrollView>
 
       <MotiView 
@@ -146,26 +159,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: SIZES.large,
     paddingBottom: 100,
   },
-  countryCard: {
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: SIZES.medium,
+    borderRadius: 16,
+    height: 50,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: SIZES.small,
+    fontSize: 16,
+    fontFamily: FONTS.medium,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
+  },
+  countryCard: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: SIZES.medium,
     borderRadius: SIZES.radius,
     borderWidth: 1,
-    marginBottom: SIZES.small,
+    marginBottom: SIZES.medium,
+    minHeight: 140,
   },
   countryInfo: {
-    flexDirection: 'row',
     alignItems: 'center',
   },
   flag: {
-    marginRight: SIZES.medium,
+    marginBottom: SIZES.small,
   },
   radioBtn: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
